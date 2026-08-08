@@ -1,0 +1,24 @@
+{
+  "_comment": "One JSON object per line (JSONL). Every agent turn during a run gets logged as one line matching this shape. Fields marked optional can be null if not applicable to that turn.",
+
+  "run_id": "string — unique ID for this whole experiment run, e.g. 'run_2026-08-08_0001'",
+  "config_hash": "string — hash of the experiment config (model + payload + condition), so identical configs can be grouped/deduplicated later",
+  "model_string": "string — EXACT model identifier, e.g. 'gemini-2.0-flash-001', never a vague name like 'Gemini'",
+  "run_date": "string — ISO 8601 timestamp, e.g. '2026-08-08T14:32:01Z'",
+
+  "payload_id": "string — which attack/benign payload was used, e.g. 'authority_spoof_003'",
+  "condition": "string — experimental condition, e.g. 'no_defense', 'defense_d1', 'defense_d2'",
+  "repetition": "integer — which repeat of this exact config this is (1, 2, 3...)",
+
+  "turn_number": "integer — position of this turn within the conversation (1, 2, 3...)",
+  "agent_role": "string — 'parser' or 'admin', which agent produced this turn",
+
+  "messages": "array — the full message history up to and including this turn, in standard chat format [{role, content}, ...]",
+  "tool_calls": "array — any tool calls made this turn, e.g. [{tool_name, arguments, result}], empty array if none",
+
+  "latency_ms": "number — how long this turn took to generate, in milliseconds",
+  "tokens": {
+    "input": "integer — input tokens used this turn",
+    "output": "integer — output tokens used this turn"
+  }
+}
