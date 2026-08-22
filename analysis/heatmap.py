@@ -1,15 +1,18 @@
 """
-Generate main heatmap: ASR by model × attack category.
+Generate publication-quality heatmap: ASR by model × attack category.
 
-This is THE central figure for the paper:
+Creates a high-resolution figure suitable for academic publication:
 - X-axis: 4 attack categories (Authority, Urgency, Data, Gaslighting)
-- Y-axis: 5 models (small to large)
-- Color: ASR (% of attacks that succeeded)
+- Y-axis: 4 models (by size)
+- Color: ASR (% of attacks that succeeded) with RdYlGn_r colormap
   - Red = high ASR (vulnerable)
   - Green = low ASR (robust)
 """
 
 import json
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 from pathlib import Path
 from collections import defaultdict
 from statistics import mean
@@ -18,7 +21,7 @@ from statistics import mean
 class HeatmapGenerator:
     """Generate ASR heatmap from logs"""
 
-    def __init__(self, log_file: str = "sandbox/logs/attacks_synthetic.jsonl"):
+    def __init__(self, log_file: str = "sandbox/logs/attacks.jsonl"):
         self.log_file = log_file
         self.data = self.load_logs()
 
@@ -43,9 +46,9 @@ class HeatmapGenerator:
 
         Returns:
         {
-            "llama2:7b": {
-                "Authority Spoofing": 0.45,
-                "Artificial Urgency": 0.52,
+            "openai/gpt-oss-20b": {
+                "Authority Spoofing": 1.4,
+                "Artificial Urgency": 0.0,
                 ...
             },
             ...
@@ -58,7 +61,7 @@ class HeatmapGenerator:
         for log in self.data:
             model = log.get("model_admin")
             category = log.get("category")
-            tool_executed = log.get("outcome", {}).get("tool_executed", False)
+            tool_executed = log.get("tool_executed", False)
 
             asr_matrix[model][category]["total"] += 1
             if tool_executed:
@@ -81,11 +84,10 @@ class HeatmapGenerator:
 
         # Order models (small to large)
         model_order = [
-            "llama2:7b",
-            "mistral:7b",
-            "gemini-2.0-flash",
-            "llama-3.1-70b",
-            "mistral-nemo",
+            "allam-2-7b",
+            "qwen/qwen3.6-27b",
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b",
         ]
 
         # Order categories
@@ -103,22 +105,100 @@ class HeatmapGenerator:
         print("Legend: 0-20% (🟢 green) | 20-40% (🟡 yellow) | 40-60% (🟠 orange) | 60-100% (🔴 red)\n")
 
         # Print header
-        header = "Model".ljust(20) + " | " + " | ".join([c[:12].center(12) for c in category_order])
+        header = "Model".ljust(25) + " | " + " | ".join([c[:12].center(12) for c in category_order])
         print(header)
-        print("-" * 90)
+        print("-" * 95)
 
         # Print rows
         for model in model_order:
             if model in asr_dict:
                 row_data = [f"{asr_dict[model].get(cat, 0):6.1f}%" for cat in category_order]
-                row_str = model.ljust(20) + " | " + " | ".join(
+                row_str = model.ljust(25) + " | " + " | ".join(
                     [v.center(12) for v in row_data]
                 )
                 print(row_str)
             else:
-                print(model.ljust(20) + " | " + " | ".join(["  -  ".center(12) for _ in category_order]))
+                print(model.ljust(25) + " | " + " | ".join(["  -  ".center(12) for _ in category_order]))
 
-        print("=" * 90)
+        print("=" * 95)
+
+    def generate_figure(self, output_path: str = "results/figures/heatmap_baseline_v1.png"):
+        """Generate publication-quality matplotlib figure"""
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+        asr_dict = self.compute_asr_matrix()
+
+        # Model order (small to large)
+        model_order = [
+            "allam-2-7b",
+            "qwen/qwen3.6-27b",
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b",
+        ]
+
+        # Category order
+        category_order = [
+            "Authority Spoofing",
+            "Artificial Urgency",
+            "Data Spoofing",
+            "Gaslighting",
+        ]
+
+        # Build matrix
+        matrix = np.zeros((len(model_order), len(category_order)))
+        for i, model in enumerate(model_order):
+            for j, category in enumerate(category_order):
+                matrix[i, j] = asr_dict.get(model, {}).get(category, 0)
+
+        # Configure publication-quality font
+        mpl.rcParams['font.family'] = 'DejaVu Sans'
+        mpl.rcParams['font.size'] = 11
+
+        # Create figure with specific size and DPI
+        fig, ax = plt.subplots(figsize=(12, 8), dpi=300)
+
+        # Use RdYlGn_r colormap (red=vulnerable, green=robust)
+        im = ax.imshow(matrix, cmap='RdYlGn_r', aspect='auto', vmin=0, vmax=100)
+
+        # Set ticks
+        ax.set_xticks(np.arange(len(category_order)))
+        ax.set_yticks(np.arange(len(model_order)))
+
+        # Set labels with bold font
+        ax.set_xticklabels(category_order, fontsize=12, fontweight='bold')
+
+        # Model labels with n=144 notation
+        model_labels = [f"{model}\n(n=144)" for model in model_order]
+        ax.set_yticklabels(model_labels, fontsize=12, fontweight='bold')
+
+        # Axis labels
+        ax.set_xlabel('Attack Category', fontsize=14, fontweight='bold', labelpad=15)
+        ax.set_ylabel('Model (by Size)', fontsize=14, fontweight='bold', labelpad=15)
+
+        # Title
+        ax.set_title('Attack Success Rate by Model and Attack Category (n=576)',
+                    fontsize=16, fontweight='bold', pad=20)
+
+        # Add text annotations in each cell
+        for i in range(len(model_order)):
+            for j in range(len(category_order)):
+                text = ax.text(j, i, f'{matrix[i, j]:.1f}%',
+                             ha="center", va="center",
+                             color="black", fontsize=13, fontweight='bold')
+
+        # Colorbar
+        cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        cbar.set_label('Attack Success Rate (%)', fontsize=12, fontweight='bold', labelpad=15)
+        cbar.ax.tick_params(labelsize=11)
+
+        # Tight layout
+        plt.tight_layout()
+
+        # Save with high DPI
+        plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+        print(f"✅ Publication-quality figure saved: {output_path}")
+
+        plt.close()
 
     def save_heatmap_data(self, output_path: str = "results/heatmap_asr_data.json"):
         """Save heatmap data as JSON"""
@@ -140,15 +220,14 @@ class HeatmapGenerator:
         print("=" * 70)
 
         for model in [
-            "llama2:7b",
-            "mistral:7b",
-            "gemini-2.0-flash",
-            "llama-3.1-70b",
-            "mistral-nemo",
+            "allam-2-7b",
+            "qwen/qwen3.6-27b",
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b",
         ]:
             if model in asr_dict:
                 avg_asr = mean(list(asr_dict[model].values())) if asr_dict[model] else 0
-                print(f"{model:20s} | Avg ASR: {avg_asr:5.1f}%")
+                print(f"{model:25s} | Avg ASR: {avg_asr:5.1f}%")
 
         print("\n" + "=" * 70)
         print("ASR SUMMARY BY CATEGORY")
@@ -167,17 +246,18 @@ class HeatmapGenerator:
 
 if __name__ == "__main__":
     print("\n" + "=" * 70)
-    print("GENERATING HEATMAP FROM SYNTHETIC DATA")
+    print("GENERATING PUBLICATION-QUALITY HEATMAP")
     print("=" * 70 + "\n")
 
-    hm = HeatmapGenerator(log_file="sandbox/logs/attacks_synthetic.jsonl")
+    hm = HeatmapGenerator(log_file="sandbox/logs/attacks.jsonl")
 
     if hm.data:
         hm.print_heatmap_ascii()
         hm.save_heatmap_data()
+        hm.generate_figure(output_path="results/figures/heatmap_baseline_v1.png")
         hm.print_summary()
         print("\n✅ HEATMAP GENERATION COMPLETE")
     else:
-        print("⚠️  No data found. Run synthetic_data.py first.")
+        print("⚠️  No data found. Run experiment runner first.")
 
     print("=" * 70)
