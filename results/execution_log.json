@@ -1,0 +1,26 @@
+[
+  {
+    "model": "openai/gpt-oss-120b",
+    "status": "SUCCESS",
+    "elapsed_seconds": 0.1434307098388672,
+    "timestamp": "2026-08-21T07:21:50.513058"
+  },
+  {
+    "model": "openai/gpt-oss-20b",
+    "status": "SUCCESS",
+    "elapsed_seconds": 0.0932309627532959,
+    "timestamp": "2026-08-21T07:21:50.606923"
+  },
+  {
+    "model": "qwen/qwen3.6-27b",
+    "status": "SUCCESS",
+    "elapsed_seconds": 0.09475994110107422,
+    "timestamp": "2026-08-21T07:21:50.702008"
+  },
+  {
+    "model": "allam-2-7b",
+    "status": "SUCCESS",
+    "elapsed_seconds": 0.12413311004638672,
+    "timestamp": "2026-08-21T07:21:50.826480"
+  }
+]

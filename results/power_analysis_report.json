@@ -1,0 +1,22 @@
+{
+  "title": "AgentTrust Power Analysis",
+  "date": "2026-08-18",
+  "parameters": {
+    "n_per_category": 15,
+    "alpha": 0.05,
+    "power_target": 0.8,
+    "test": "Binomial Test (one-sided)"
+  },
+  "results": {
+    "baseline_asr": 50.0,
+    "mdes_alternative_asr": 84.28288745880126,
+    "mdes_effect_size_pp": 34.3,
+    "interpretation": "With 15 payloads per category, we can detect a difference of ~34.3pp in ASR with 80% power."
+  },
+  "implications": [
+    "True ASR difference \u2265 34pp \u2192 We WILL detect it statistically",
+    "True ASR difference < 34pp \u2192 We likely WON'T detect it (Type II error)",
+    "This is acceptable. Smaller effects require larger n (more payloads).",
+    "Current n=15 per category is a good balance: fast experiments + detectable effects."
+  ]
+}

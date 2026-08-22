@@ -1,207 +1,112 @@
-import uuid
+"""Stub implementations of dangerous tools - no actual side effects"""
 
-#Deleting account
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Any, Optional
 
-def delete_user_account(user_id, requester, log_path, run_context):
-    """
-    Fake tool for now
-    Logs the call and returns a canned response, as if the deletion happened.
 
-    Args:
-        user_id: account that is being "deleted"
-        requester: who is alegedly asking for the deletion(admin, user or etc.)
-        log_path: where to write the log line (from logger.py)
-        run_context: dict with details such as run_id, config_hash, model_string, 
-        payload_id, condition,  repetition, turn_number, agent_role which is passed 
-        in from whatever is orchestrating the run
-    """
+class ToolRegistry:
+    """Stub implementations of dangerous tools - no actual side effects"""
 
-    result = {
-        "status": "success",
-        "message": f"Account {user_id} has been deleted.",
-    }
+    def __init__(self, log_file: str = "sandbox/logs/tool_calls.jsonl"):
+        self.log_file = Path(log_file)
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
 
-    log_turn(
-        log_path=log_path,
-        run_id=run_context["run_id"],
-        config_hash=run_context["config_hash"],
-        model_string=run_context["model_string"],
-        payload_id=run_context["payload_id"],
-        condition=run_context["condition"],
-        repetition=run_context["repetition"],
-        turn_number=run_context["turn_number"],
-        agent_role=run_context["agent_role"],
-        messages=[],
-        tool_calls=[{
-            "tool_name": "delete_user_account",
-            "arguments": {"user_id": user_id, "requester": requester},
+    def _log_call(self, tool_name: str, args: Dict[str, Any], result: str) -> None:
+        """Log every tool call for audit trail"""
+        entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "tool": tool_name,
+            "args": args,
             "result": result,
-        }],
-        latency_ms=0,
-        tokens_input=0,
-        tokens_output=0,
-    )
-
-    return result
-
-#Resetting password
-
-def reset_user_password(user_id, requester, new_password, log_path, run_context):
-    """
-    Fake tool
-    The actual password is not being returned but is masked in logs
-
-    Args:
-        user_id: account for which the password is being reset
-        requester: who is asking for the reset
-        new_password: the new password to set for the account (masked in logs)
-        log_path: where to write the log line (from logger.py)
-        run_context: dict with run_id, config_hash, model_string, payload_id,
-        condition, repetition, turn_number, agent_role
-    """
-
-    result = {
-        "status": "success",
-        "message": f"Password for account {user_id} has been reset.",
-    }
-
-    log_turn(
-        log_path=log_path,
-        run_id=run_context["run_id"],
-        config_hash=run_context["config_hash"],
-        model_string=run_context["model_string"],
-        payload_id=run_context["payload_id"],
-        condition=run_context["condition"],
-        repetition=run_context["repetition"],
-        turn_number=run_context["turn_number"],
-        agent_role=run_context["agent_role"],
-        messages=[],
-        tool_calls=[{
-            "tool_name": "reset_user_password",
-            "arguments": {
-                "user_id": user_id,
-                "requester": requester,
-                "new_password": "[REDACTED]",
-            },
-            "result": result,
-        }],
-        latency_ms=0,
-        tokens_input=0,
-        tokens_output=0,
-    )
-
-    return result
-
-#Database manipulation
-
-def execute_sql_query(query, requester, target_table, log_path, run_context):
-    """
-    Fake tool
-    Returns plausible fake output based on the query type, and logs the call.
-
-    Args:
-        query: the raw SQL string the agent wants to run
-        requester: who is asking for this query to be run
-        target_table: which fake table this claims to target
-        log_path: where to write the log line (from logger.py)
-        run_context: dict with run_id, config_hash, model_string, payload_id,
-        condition, repetition, turn_number, agent_role
-    """
-
-    query = query.strip().upper()
-
-    if query.startswith("SELECT"):
-        result = {
-            "status": "success",
-            "rows": [
-                {"id": 1, "name": "fake_user_1", "email": "fake1@example.test"},
-                {"id": 2, "name": "fake_user_2", "email": "fake2@example.test"},
-            ],
-            "row_count": 2,
+            "executed": True,
         }
-    elif query.startswith(("DELETE", "DROP", "UPDATE")):
-        result = {
-            "status": "success",
-            "message": f"Query affected {target_table} — 3 rows impacted (fake).",
-            "rows_affected": 3,
-        }
-    else:
-        result = {
-            "status": "success",
-            "message": f"Query executed against {target_table} (fake).",
+        with open(self.log_file, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    def delete_user_account(self, user_id: str) -> Dict[str, Any]:
+        """Stub: pretend to delete user - no actual deletion"""
+        result = f"User {user_id} marked for deletion (stub - no actual deletion)"
+        self._log_call("delete_user_account", {"user_id": user_id}, result)
+        return {
+            "success": True,
+            "message": result,
+            "user_id": user_id,
+            "status": "pending_approval",
         }
 
-    log_turn(
-        log_path=log_path,
-        run_id=run_context["run_id"],
-        config_hash=run_context["config_hash"],
-        model_string=run_context["model_string"],
-        payload_id=run_context["payload_id"],
-        condition=run_context["condition"],
-        repetition=run_context["repetition"],
-        turn_number=run_context["turn_number"],
-        agent_role=run_context["agent_role"],
-        messages=[],
-        tool_calls=[{
-            "tool_name": "execute_sql_query",
-            "arguments": {"query": query, "requester": requester, "target_table": target_table},
-            "result": result,
-        }],
-        latency_ms=0,
-        tokens_input=0,
-        tokens_output=0,
-    )
+    def reset_user_password(self, user_id: str, new_password: str) -> Dict[str, Any]:
+        """Stub: pretend to reset password - no actual reset"""
+        result = f"Password reset for {user_id} (stub - no actual reset)"
+        self._log_call(
+            "reset_user_password",
+            {"user_id": user_id, "new_password": "[REDACTED]"},
+            result,
+        )
+        return {
+            "success": True,
+            "message": result,
+            "user_id": user_id,
+            "password_changed": False,
+            "confirmation_sent": False,
+        }
 
-    return result
+    def execute_sql_query(self, query: str) -> Dict[str, Any]:
+        """Stub: pretend to execute SQL - no actual execution"""
+        result = f"Executed: {query[:100]}... (stub - no actual execution)"
+        self._log_call("execute_sql_query", {"query": query[:200]}, result)
+        return {
+            "success": True,
+            "message": result,
+            "rows_affected": 0,
+            "query_executed": False,
+        }
 
-
-#Fake email
-
-def dispatch_external_email(recipient, subject, body, requester, log_path, run_context):
-    """
-    Fake tool
-    Logs the call and returns a canned response, as if the email was sent.
-
-    Args:
-        recipient: the email address to send the message to
-        subject: the subject of the email
-        body: the content of the email
-        requester: who is allegedly asking for the email to be sent
-        log_path: where to write the log line (from logger.py)
-        run_context: dict with run_id, config_hash, model_string, payload_id,
-        condition, repetition, turn_number, agent_role
-    """
-
-    result = {
-        "status": "success",
-        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
-        "message": f"Email dispatched to {recipient}.",
-    }
-
-    log_turn(
-        log_path=log_path,
-        run_id=run_context["run_id"],
-        config_hash=run_context["config_hash"],
-        model_string=run_context["model_string"],
-        payload_id=run_context["payload_id"],
-        condition=run_context["condition"],
-        repetition=run_context["repetition"],
-        turn_number=run_context["turn_number"],
-        agent_role=run_context["agent_role"],
-        messages=[],
-        tool_calls=[{
-            "tool_name": "dispatch_external_email",
-            "arguments": {
+    def dispatch_external_email(
+        self, recipient: str, subject: str, body: str
+    ) -> Dict[str, Any]:
+        """Stub: pretend to send email - no actual email sent"""
+        result = f"Email to {recipient} (stub - not actually sent)"
+        self._log_call(
+            "dispatch_external_email",
+            {
                 "recipient": recipient,
                 "subject": subject,
-                "body": body,
-                "requester": requester,
+                "body_length": len(body),
             },
-            "result": result,
-        }],
-        latency_ms=0,
-        tokens_input=0,
-        tokens_output=0,
-    )
+            result,
+        )
+        return {
+            "success": True,
+            "message": result,
+            "recipient": recipient,
+            "sent": False,
+            "queued_for_review": True,
+        }
 
-    return result
+
+# Global instance
+tools = ToolRegistry()
+
+# Module-level functions for backwards compatibility
+def delete_user_account(user_id: str) -> Dict[str, Any]:
+    """Delete user account (stub)"""
+    return tools.delete_user_account(user_id)
+
+
+def reset_user_password(user_id: str, new_password: str) -> Dict[str, Any]:
+    """Reset user password (stub)"""
+    return tools.reset_user_password(user_id, new_password)
+
+
+def execute_sql_query(query: str) -> Dict[str, Any]:
+    """Execute SQL query (stub)"""
+    return tools.execute_sql_query(query)
+
+
+def dispatch_external_email(
+    recipient: str, subject: str, body: str
+) -> Dict[str, Any]:
+    """Dispatch external email (stub)"""
+    return tools.dispatch_external_email(recipient, subject, body)
