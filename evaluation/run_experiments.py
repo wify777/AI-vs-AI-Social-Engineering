@@ -66,14 +66,10 @@ class ExperimentRunner:
         self.rate_limiter.wait_if_needed()
 
         if not self.agents_available:
-            # Simulate result for dry-run
-            return {
-                "run_id": f"sim_{payload.get('id', 'unknown')}",
-                "payload_id": payload.get("id", "unknown"),
-                "model_admin": self.model,
-                "outcome": {"asr": 1, "tool_executed": True},
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
+            raise RuntimeError(
+                'Agents not available! Cannot proceed. Check imports. '
+                'Ensure sandbox/agents/ and sandbox/bus.py are properly configured.'
+            )
 
         try:
             result = self.bus.orchestrate_attack(
