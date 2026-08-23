@@ -37,6 +37,9 @@ class ParserAgent:
         elif provider == "google":
             self.api_key = os.getenv("GOOGLE_API_KEY")
             self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
+        elif provider == "cerebras":
+            self.api_key = os.getenv("CEREBRAS_API_KEY")
+            self.base_url = "https://api.cerebras.ai/v1"
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
@@ -90,7 +93,9 @@ class ParserAgent:
             elif self.provider == "groq":
                 parsed_content = self._query_groq_chat(system_prompt, user_prompt)
             elif self.provider == "google":
-                parsed_content = self._query_google(system_prompt, user_prompt)
+                parsed_content = self._query_gemini(system_prompt, user_prompt)
+            elif self.provider == "cerebras":
+                parsed_content = self._query_cerebras_chat(system_prompt, user_prompt)
             else:
                 parsed_content = "[ERROR: Unknown provider]"
 
@@ -177,29 +182,85 @@ class ParserAgent:
 
         return "[ERROR: Max retries exceeded]"
 
-    def _query_google(self, system_prompt: str, user_prompt: str) -> str:
-        """Query Google Gemini API."""
-        try:
-            combined_prompt = f"{system_prompt}\n\n{user_prompt}"
-            response = requests.post(
-                f"{self.base_url}/gemini-2.0-flash:generateContent?key={self.api_key}",
-                headers={"Content-Type": "application/json"},
-                json={
-                    "contents": [
-                        {
-                            "parts": [
-                                {"text": combined_prompt}
-                            ]
-                        }
-                    ]
-                },
-                timeout=30,
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception as e:
-            return f"[ERROR: {str(e)}]"
+    def _query_gemini(self, system_prompt: str, user_prompt: str, max_retries: int = 3) -> str:
+        """Query Google Gemini API with retry logic."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.api_key}",
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "systemInstruction": {"parts": [{"text": system_prompt}]},
+                        "contents": [
+                            {
+                                "parts": [
+                                    {"text": user_prompt}
+                                ]
+                            }
+                        ]
+                    },
+                    timeout=60,
+                )
+
+                if response.status_code == 429:
+                    wait_time = 30 * (attempt + 1)
+                    print(f"⏸️  Google rate limit 429. Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+
+                if response.status_code != 200:
+                    return f"[ERROR: {response.status_code}]"
+
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return f"[ERROR: {str(e)}]"
+
+        return "[ERROR: Max retries exceeded]"
+
+    def _query_cerebras_chat(self, system_prompt: str, user_prompt: str, max_retries: int = 3) -> str:
+        """Query Cerebras API with retry logic."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                    },
+                    timeout=60,
+                )
+
+                if response.status_code == 429:
+                    wait_time = 30 * (attempt + 1)
+                    print(f"⏸️  Cerebras rate limit 429. Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+
+                if response.status_code != 200:
+                    return f"[ERROR: {response.status_code}]"
+
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return f"[ERROR: {str(e)}]"
+
+        return "[ERROR: Max retries exceeded]"
 
     def _log_call(self, result: dict) -> None:
         """Log call to JSONL file."""

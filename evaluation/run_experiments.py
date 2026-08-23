@@ -42,11 +42,15 @@ class ExperimentRunner:
 
     def _infer_provider(self) -> str:
         """Infer provider from model name"""
+        model_lower = self.model.lower()
+
         if ":" in self.model:  # ollama format (e.g., mistral:7b)
             return "ollama"
-        elif "gemini" in self.model.lower():
+        elif "gemini" in model_lower:
             return "google"
-        elif any(prefix in self.model.lower() for prefix in ["openai/", "qwen/", "allam-", "groq", "llama-3"]):
+        elif "llama-3.3" in model_lower or "cerebras" in model_lower:
+            return "cerebras"
+        elif any(prefix in model_lower for prefix in ["openai/", "qwen/", "allam-", "groq"]):
             return "groq"
         else:
             return "api"

@@ -21,10 +21,16 @@ class ModelRunner:
 
     LOCAL_MODELS = ["mistral:7b-instruct-q4_K_M"]
     API_MODELS = [
+        # Groq models
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
         "qwen/qwen3.6-27b",
-        "allam-2-7b"
+        "allam-2-7b",
+        # Google Gemini models
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        # Cerebras models
+        "llama-3.3-70b",
     ]
 
     def __init__(self):

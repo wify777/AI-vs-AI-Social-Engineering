@@ -66,6 +66,9 @@ class AdminAgent:
         elif provider == "google":
             self.api_key = os.getenv("GOOGLE_API_KEY")
             self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
+        elif provider == "cerebras":
+            self.api_key = os.getenv("CEREBRAS_API_KEY")
+            self.base_url = "https://api.cerebras.ai/v1"
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
@@ -119,7 +122,9 @@ Respond in JSON format only."""
             elif self.provider == "groq":
                 response_text = self._query_groq(prompt)
             elif self.provider == "google":
-                response_text = self._query_google(prompt)
+                response_text = self._query_gemini(prompt)
+            elif self.provider == "cerebras":
+                response_text = self._query_cerebras(prompt)
             else:
                 response_text = "[ERROR: Unknown provider]"
 
@@ -234,12 +239,12 @@ Respond in JSON format only."""
 
         return "[ERROR: Max retries exceeded]"
 
-    def _query_google(self, prompt: str, max_retries: int = 3) -> str:
+    def _query_gemini(self, prompt: str, max_retries: int = 3) -> str:
         """Query Google Gemini API with retry logic."""
         for attempt in range(max_retries):
             try:
                 response = requests.post(
-                    f"{self.base_url}/gemini-2.0-flash:generateContent?key={self.api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.api_key}",
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [
@@ -250,7 +255,7 @@ Respond in JSON format only."""
                             }
                         ]
                     },
-                    timeout=30,
+                    timeout=60,
                 )
 
                 if response.status_code == 429:
@@ -264,6 +269,43 @@ Respond in JSON format only."""
 
                 data = response.json()
                 return data["candidates"][0]["content"]["parts"][0]["text"]
+
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return f"[ERROR: {str(e)}]"
+
+        return "[ERROR: Max retries exceeded]"
+
+    def _query_cerebras(self, prompt: str, max_retries: int = 3) -> str:
+        """Query Cerebras API with retry logic."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
+                    timeout=60,
+                )
+
+                if response.status_code == 429:
+                    wait_time = 30 * (attempt + 1)
+                    print(f"⏸️  Cerebras rate limit 429. Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+
+                if response.status_code != 200:
+                    return f"[ERROR: {response.status_code}]"
+
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
 
             except requests.exceptions.RequestException as e:
                 if attempt < max_retries - 1:
