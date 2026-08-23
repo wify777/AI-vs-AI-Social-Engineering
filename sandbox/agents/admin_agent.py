@@ -195,50 +195,83 @@ Respond in JSON format only."""
         except Exception as e:
             return f"[ERROR: {str(e)}]"
 
-    def _query_groq(self, prompt: str) -> str:
-        """Query Groq API."""
-        try:
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self.model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 1000,
-                },
-                timeout=30,
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-        except Exception as e:
-            return f"[ERROR: {str(e)}]"
+    def _query_groq(self, prompt: str, max_retries: int = 3) -> str:
+        """Query Groq API with retry logic for rate limiting."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 1000,
+                    },
+                    timeout=60,
+                )
 
-    def _query_google(self, prompt: str) -> str:
-        """Query Google Gemini API."""
-        try:
-            response = requests.post(
-                f"{self.base_url}/gemini-2.0-flash:generateContent?key={self.api_key}",
-                headers={"Content-Type": "application/json"},
-                json={
-                    "contents": [
-                        {
-                            "parts": [
-                                {"text": prompt}
-                            ]
-                        }
-                    ]
-                },
-                timeout=30,
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception as e:
-            return f"[ERROR: {str(e)}]"
+                # Handle rate limiting
+                if response.status_code == 429:
+                    wait_time = 30 * (attempt + 1)  # 30, 60, 90 seconds
+                    print(f"⏸️  Admin rate limit 429. Waiting {wait_time}s (attempt {attempt+1}/{max_retries})...")
+                    time.sleep(wait_time)
+                    continue
+
+                if response.status_code != 200:
+                    return f"[ERROR: {response.status_code}]"
+
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return f"[ERROR: {str(e)}]"
+
+        return "[ERROR: Max retries exceeded]"
+
+    def _query_google(self, prompt: str, max_retries: int = 3) -> str:
+        """Query Google Gemini API with retry logic."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/gemini-2.0-flash:generateContent?key={self.api_key}",
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "contents": [
+                            {
+                                "parts": [
+                                    {"text": prompt}
+                                ]
+                            }
+                        ]
+                    },
+                    timeout=30,
+                )
+
+                if response.status_code == 429:
+                    wait_time = 30 * (attempt + 1)
+                    print(f"⏸️  Google rate limit 429. Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+
+                if response.status_code != 200:
+                    return f"[ERROR: {response.status_code}]"
+
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return f"[ERROR: {str(e)}]"
+
+        return "[ERROR: Max retries exceeded]"
 
     def _parse_decision(self, response_text: str) -> dict:
         """Parse LLM response to extract decision."""

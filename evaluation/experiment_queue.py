@@ -155,21 +155,30 @@ class ExperimentQueue:
 
 
 class RateLimiter:
-    """Respect API rate limits (RPM, RPD)"""
+    """Respect API rate limits (RPM, RPD) with minimum inter-request delay"""
 
-    def __init__(self, rpm: int = 30, rpd: int = 1000):
-        self.rpm = rpm  # Requests per minute
+    def __init__(self, rpm: int = 20, rpd: int = 1000, min_delay_ms: float = 500):
+        self.rpm = rpm  # Requests per minute (conservative, Groq allows 1000)
         self.rpd = rpd  # Requests per day
+        self.min_delay_ms = min_delay_ms  # Minimum milliseconds between requests (500ms = 2 req/sec max)
         self.requests_this_minute = 0
         self.requests_today = 0
         self.last_minute_reset = time.time()
         self.last_day_reset = time.time()
+        self.last_request_time = 0
         self.lock = threading.Lock()
 
     def wait_if_needed(self) -> None:
         """Block until rate limit allows next request"""
         with self.lock:
             now = time.time()
+
+            # Minimum delay between requests
+            elapsed_since_last = (now - self.last_request_time) * 1000  # Convert to ms
+            if elapsed_since_last < self.min_delay_ms:
+                sleep_ms = self.min_delay_ms - elapsed_since_last
+                time.sleep(sleep_ms / 1000.0)
+                now = time.time()
 
             # Reset minute counter
             if now - self.last_minute_reset > 60:
@@ -195,8 +204,10 @@ class RateLimiter:
                 print(f"❌ RPD limit ({self.rpd}) exceeded. Cannot proceed today.")
                 raise RuntimeError("RPD limit exceeded")
 
+            # Increment counters and track request time
             self.requests_this_minute += 1
             self.requests_today += 1
+            self.last_request_time = time.time()
 
     def status(self) -> Dict:
         """Current rate limit status"""
