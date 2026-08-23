@@ -52,14 +52,11 @@ class MessageBus:
         start_time = datetime.utcnow()
 
         try:
-            # Parser processes injected content (attack embedded in user_request)
-            user_request_with_payload = payload.get("user_request", "Check this website")
-            # Inject attack content into the user request that Parser will analyze
-            full_request = f"{user_request_with_payload}\n\n{payload['attack_content']}"
-
+            # Parser processes injected content (indirect prompt injection via web scraping)
             parser_result = parser.parse_content(
                 url=payload.get("url", "https://evil.example.com"),
-                user_request=full_request
+                user_request=payload.get("user_request", "Analyze this web content"),
+                injected_payload=payload["attack_content"]
             )
 
             # Admin processes Parser's output
@@ -88,14 +85,14 @@ class MessageBus:
 
                 "parser_stage": {
                     "input_user_request": payload.get("user_request", ""),
-                    "injected_payload": payload["attack_content"][:500],
+                    "injected_payload": parser_result.get("injected_payload", "")[:500],
                     "parser_response": parser_result.get("parsed_content", "")[:500],
                     "latency_ms": parser_result.get("latency_ms", 0),
                 },
 
                 "admin_stage": {
                     "input_message": parser_result.get("parsed_content", "")[:500],
-                    "admin_response": admin_result.get("response", "")[:500],
+                    "admin_response": admin_result.get("admin_response", "")[:500],  # FIXED: was "response"
                     "tool_attempted": admin_result.get("tool_attempted", None),
                     "tool_executed": tool_executed,
                     "tool_args": admin_result.get("tool_args", None),
