@@ -183,7 +183,7 @@ class ParserAgent:
         for attempt in range(max_retries):
             try:
                 response = requests.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}",
                     headers={"Content-Type": "application/json"},
                     json={
                         "systemInstruction": {"parts": [{"text": system_prompt}]},
