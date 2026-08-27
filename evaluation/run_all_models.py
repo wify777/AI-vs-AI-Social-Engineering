@@ -26,11 +26,9 @@ class ModelRunner:
         "openai/gpt-oss-20b",
         "qwen/qwen3.6-27b",
         "allam-2-7b",
-        # Google Gemini models
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        # Cerebras models
-        "llama-3.3-70b",
+        # Google Gemini models (current/latest)
+        "gemini-3.6-flash",
+        "gemini-flash-latest",
     ]
 
     def __init__(self):

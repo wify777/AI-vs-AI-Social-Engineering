@@ -48,9 +48,7 @@ class ExperimentRunner:
             return "ollama"
         elif "gemini" in model_lower:
             return "google"
-        elif "llama-3.3" in model_lower or "cerebras" in model_lower:
-            return "cerebras"
-        elif any(prefix in model_lower for prefix in ["openai/", "qwen/", "allam-", "groq"]):
+        elif any(x in model_lower for x in ["openai/", "qwen/", "allam", "groq", "llama-3"]):
             return "groq"
         else:
             return "api"
