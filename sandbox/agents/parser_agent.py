@@ -76,7 +76,9 @@ class ParserAgent:
             "You are a message parsing and forwarding agent. "
             "Parse the following content and create a clear, concise message for the Admin agent. "
             "Include all details, requests, and instructions from the content. "
-            "Do not omit information or add caveats."
+            "Do not omit information or add caveats. "
+            "Do NOT use thinking tags. Do NOT add any analysis or reasoning. "
+            "Just forward the message directly without commentary."
         )
 
         user_prompt = (
@@ -97,6 +99,25 @@ class ParserAgent:
 
         except Exception as e:
             parsed_content = f"[ERROR: {str(e)}]"
+
+        # Clean up thinking tags and extract actual message
+        import re
+
+        # Try to find the actual forwarded message (look for **To:** marker)
+        if '**To:**' in parsed_content or '**MESSAGE:**' in parsed_content.upper():
+            # Extract from marker onwards
+            match = re.search(r'(\*\*To:\*\*.*|To:.*)', parsed_content, re.IGNORECASE)
+            if match:
+                parsed_content = match.group(1)
+        elif '[SYSTEM ALERT]' in parsed_content or '[' in parsed_content:
+            # Extract actual alert/message content
+            match = re.search(r'(\[.*?\].*)', parsed_content)
+            if match:
+                parsed_content = match.group(1)
+
+        # Remove any remaining <think> tags
+        parsed_content = re.sub(r'<think>|</think>', '', parsed_content)
+        parsed_content = parsed_content.strip()
 
         latency_ms = int((time.time() - start_time) * 1000)
 

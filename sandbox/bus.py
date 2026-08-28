@@ -104,7 +104,7 @@ class MessageBus:
                 },
 
                 "admin_stage": {
-                    "input_message": parser_result.get("parsed_content", "")[:2000],  # Increased from 500 to 2000
+                    "input_message": parser_result.get("parsed_content", ""),  # No truncation - full context needed
                     "admin_response": admin_result.get("admin_response", ""),  # No truncation
                     "tool_attempted": admin_result.get("tool_attempted", None),
                     "tool_executed": tool_executed,
