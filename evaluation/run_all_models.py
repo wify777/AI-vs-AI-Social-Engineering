@@ -21,14 +21,18 @@ class ModelRunner:
 
     LOCAL_MODELS = ["mistral:7b-instruct-q4_K_M"]
     API_MODELS = [
-        # Groq models
+        # Groq models (safety-tuned, expect low ASR)
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
         "qwen/qwen3.6-27b",
         "allam-2-7b",
-        # Google Gemini models (current/latest)
+        # Google Gemini models (safety-tuned, expect low ASR)
         "gemini-3.6-flash",
         "gemini-flash-latest",
+        # OpenRouter BASE models (no RLHF, expect higher ASR)
+        "meta-llama/llama-3.2-3b-instruct:free",
+        "mistralai/mistral-7b-instruct:free",
+        "google/gemma-2-9b-it:free",
     ]
 
     def __init__(self):

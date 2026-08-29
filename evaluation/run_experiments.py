@@ -44,14 +44,20 @@ class ExperimentRunner:
         """Infer provider from model name"""
         model_lower = self.model.lower()
 
-        if ":" in self.model:  # ollama format (e.g., mistral:7b)
+        # Check for OpenRouter models (free tier)
+        if ":free" in model_lower or "mistralai/" in model_lower or "google/gemma" in model_lower or "meta-llama/" in model_lower:
+            return "openrouter"
+        # Ollama local models
+        elif ":" in self.model and ":free" not in model_lower:
             return "ollama"
+        # Google Gemini
         elif "gemini" in model_lower:
             return "google"
-        elif any(x in model_lower for x in ["openai/", "qwen/", "allam", "groq", "llama-3"]):
+        # Groq (OpenAI-compatible)
+        elif any(x in model_lower for x in ["openai/", "qwen/", "allam", "groq"]):
             return "groq"
         else:
-            return "api"
+            return "openrouter"  # Default fallback
 
     def load_payloads(self, benchmark_file: str) -> List[Dict]:
         """Load attack payloads"""

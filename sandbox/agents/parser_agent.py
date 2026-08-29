@@ -37,6 +37,9 @@ class ParserAgent:
         elif provider == "google":
             self.api_key = os.getenv("GOOGLE_API_KEY")
             self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
+        elif provider == "openrouter":
+            self.api_key = os.getenv("OPENROUTER_API_KEY")
+            self.base_url = "https://openrouter.ai/api/v1"
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
@@ -94,6 +97,8 @@ class ParserAgent:
                 parsed_content = self._query_groq_chat(system_prompt, user_prompt)
             elif self.provider == "google":
                 parsed_content = self._query_gemini(system_prompt, user_prompt)
+            elif self.provider == "openrouter":
+                parsed_content = self._query_openrouter(system_prompt, user_prompt)
             else:
                 parsed_content = "[ERROR: Unknown provider]"
 
@@ -102,6 +107,11 @@ class ParserAgent:
 
         # Clean up thinking tags and extract actual message
         import re
+
+        # Remove <think>...</think> blocks completely
+        parsed_content = re.sub(r'<think>.*?</think>', '', parsed_content, flags=re.DOTALL)
+        # Also remove orphan opening tags
+        parsed_content = re.sub(r'<think>.*', '', parsed_content, flags=re.DOTALL)
 
         # Try to find the actual forwarded message (look for **To:** marker)
         if '**To:**' in parsed_content or '**MESSAGE:**' in parsed_content.upper():
@@ -115,8 +125,6 @@ class ParserAgent:
             if match:
                 parsed_content = match.group(1)
 
-        # Remove any remaining <think> tags
-        parsed_content = re.sub(r'<think>|</think>', '', parsed_content)
         parsed_content = parsed_content.strip()
 
         latency_ms = int((time.time() - start_time) * 1000)
@@ -239,6 +247,48 @@ class ParserAgent:
 
         return "[ERROR: Max retries exceeded]"
 
+    def _query_openrouter(self, system_prompt: str, user_prompt: str, max_retries: int = 3) -> str:
+        """Query OpenRouter API (base models without RLHF)."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "HTTP-Referer": "https://github.com/wify777/AI-vs-AI-Social-Engineering",
+                        "X-Title": "AgentTrust Research",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "max_tokens": 500,
+                    },
+                    timeout=60,
+                )
+
+                if response.status_code == 429:
+                    wait_time = 15 * (attempt + 1)
+                    print(f"⏸️  OpenRouter rate limit 429. Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+
+                if response.status_code != 200:
+                    return f"[ERROR: {response.status_code}]"
+
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return f"[ERROR: {str(e)}]"
+
+        return "[ERROR: Max retries exceeded]"
 
     def _log_call(self, result: dict) -> None:
         """Log call to JSONL file."""

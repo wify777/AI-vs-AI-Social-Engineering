@@ -17,14 +17,14 @@ from sandbox.bus import MessageBus
 # Setup
 all_payloads = json.load(open('benchmark/benchmark.json'))
 # 20 разных пейлоадов из всех категорий
-pilot_payloads = all_payloads[:5] + all_payloads[15:20] + all_payloads[30:35] + all_payloads[45:50]
+pilot_payloads = all_payloads[:5]  # First 5 only for quick test
 
 # Используем надёжную Groq модель для пилота
 MODEL = "qwen/qwen3.6-27b"
 PROVIDER = "groq"
 
 print(f"\n{'='*70}")
-print(f"PILOT RUN: {MODEL} × {len(pilot_payloads)} payloads × 3 reps = {len(pilot_payloads)*3} experiments")
+print(f"QUICK TEST: {MODEL} × {len(pilot_payloads)} payloads × 1 rep = {len(pilot_payloads)*3} experiments")
 print(f"{'='*70}\n")
 
 parser = ParserAgent(model=MODEL, provider=PROVIDER)
@@ -36,7 +36,7 @@ errors = 0
 start_time = time.time()
 
 for i, p in enumerate(pilot_payloads, 1):
-    for rep in [1, 2, 3]:
+    for rep in [1]:
         idx = (i-1)*3 + rep
         try:
             result = bus.orchestrate_attack(payload=p, parser=parser, admin=admin, repetition=rep)
