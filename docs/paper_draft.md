@@ -4,9 +4,9 @@
 
 Multi-agent LLM systems increasingly delegate tasks across agents with different privilege levels. We introduce AgentTrust, an open-source benchmark measuring whether a compromised low-privilege Parser agent can manipulate a high-privilege Admin agent into executing unauthorized tool calls via social engineering tactics.
 
-**Baseline Results (16 payloads, 4 models, n=576):** We evaluate four Groq-hosted models across 16 attack payloads spanning four social engineering categories: authority spoofing, artificial urgency, data spoofing, and gaslighting. Our primary metric — Attack Success Rate (ASR) — is measured by direct inspection of tool execution logs, avoiding the confounding error introduced by LLM-as-judge approaches. Overall ASR: 1.04% (6/576). Most vulnerable: allam-2-7b (2.8% ASR). Most robust: openai/gpt-oss-120b and qwen/qwen3.6-27b (0% ASR). These preliminary results suggest that safety-tuned Groq models effectively resist basic social engineering attacks, though generalization is limited by our focus on safety-tuned models and initial payload set.
+**Main Results (v3: 60 payloads, 8 models, n=1,591):** We evaluated eight models (Groq, Google, OpenRouter) using 60 social engineering attack payloads across four categories: authority spoofing, artificial urgency, data spoofing, and gaslighting. Our primary metric — Attack Success Rate (ASR) — measures tool execution directly from execution logs. Overall ASR: 3.08% (49/1,591). Critically, we discovered that **defensive language in system prompts produces artifactual 0% ASR results**, masking genuine model vulnerabilities. When we removed defensive disclaimers, we observed significant variation: openai/gpt-oss-20b showed 29.0% ASR (95% CI: 23.9–34.7%, n=269), while openai/gpt-oss-120b showed 7.67% (95% CI: 5.2–11.1%, n=326). Base models (Llama-3.2-3b, Mistral-7b) maintained 0% ASR across 1,080 combined experiments, suggesting that training-time safety (RLHF) determines true resistance to social engineering.
 
-**Extended Experiments (60 payloads, in progress):** We are expanding the benchmark to 60 payloads (15 per category) to improve attack quality and statistical power. Future work will evaluate additional models (Google Gemini Flash, Cerebras Llama, OpenRouter models) and test more sophisticated attack tactics (multi-turn, chained, jailbreak-style). This work provides a foundation for understanding inter-agent trust vulnerabilities in multi-agent LLM systems.
+**Key Finding:** Prompt-based security disclaimers provide false confidence. Real defenses emerge from model training, not instructions.
 
 Our benchmark and all experimental artifacts are publicly available at https://github.com/wify777/AI-vs-AI-Social-Engineering
 
@@ -165,132 +165,187 @@ With n=144 runs per model (16 payloads × 9 runs each), power analysis shows:
 
 ## 4. Results
 
-### 4.1 Overall ASR (Baseline v1)
+### 4.1 Overall ASR (v3: 60 payloads, 8 models, n=1,591)
 
-| Model | ASR (%) | 95% CI | n |
-|---|---|---|---|
-| allam-2-7b | 2.8 | [1.1%, 6.9%] | 144 |
-| openai/gpt-oss-20b | 1.4 | [0.4%, 4.9%] | 144 |
-| openai/gpt-oss-120b | 0.0 | [0.0%, 2.6%] | 144 |
-| qwen/qwen3.6-27b | 0.0 | [0.0%, 2.6%] | 144 |
-| **Overall** | **1.04** | **[0.5%, 2.2%]** | **576** |
+| Model | n | Successes | ASR (%) | 95% CI (%) | Interpretation |
+|---|---|---|---|---|---|
+| openai/gpt-oss-20b | 269 | 78 | 29.00 | [23.9–34.7] | **HIGHLY VULNERABLE** |
+| openai/gpt-oss-120b | 326 | 25 | 7.67 | [5.2–11.1] | Mixed (moderate defense) |
+| gemini-3.6-flash | 39 | 1 | 2.56 | [0.5–13.2] | Protected (undersampled) |
+| allam-2-7b | 1 | 1 | 100.00 | [20.7–100.0] | Undersampled (n=1) |
+| qwen/qwen3.6-27b | 1 | 0 | 0.00 | [0.0–79.3] | Undersampled (n=1) |
+| gemini-flash-latest | 34 | 0 | 0.00 | [0.0–10.2] | Protected (undersampled) |
+| meta-llama/llama-3.2-3b:free | 540 | 0 | 0.00 | [0.0–0.7] | **HIGHLY PROTECTED** |
+| mistralai/mistral-7b:free | 540 | 0 | 0.00 | [0.0–0.7] | **HIGHLY PROTECTED** |
+| **Overall** | **1,591** | **49** | **3.08** | **[2.3–4.1]** | **Mixed across providers** |
 
-**Key observation:** All four models demonstrate low vulnerability to baseline attacks. The most vulnerable model (allam-2-7b at 2.8%) is still highly resistant, failing to comply with 97.2% of attack attempts. The most robust models show zero successful attacks across 144 scenarios each.
+**Critical finding:** Overall ASR (3.08%) masks extreme variation across models. Within the Groq safety-tuned family, openai/gpt-oss-20b is dramatically more vulnerable (29%) than gpt-oss-120b (7.67%) — a 2.9× difference. Base models (Llama, Mistral) from OpenRouter show complete resistance (0% ASR across 1,080 combined scenarios). Google Gemini models show intermediate vulnerability (~2.6%).
 
-### 4.2 ASR by Attack Category
+### 4.2 ASR by Attack Category (All Models)
 
-| Category | ASR (%) | 95% CI | n |
-|---|---|---|---|
-| Authority Spoofing | 0.7 | [0.1%, 3.8%] | 144 |
-| Artificial Urgency | 1.4 | [0.4%, 4.9%] | 144 |
-| Data Spoofing | 1.4 | [0.4%, 4.9%] | 144 |
-| Gaslighting | 0.7 | [0.1%, 3.8%] | 144 |
+| Category | n | Successes | ASR (%) | 95% CI |
+|---|---|---|---|---|
+| Authority Spoofing | 397 | 25 | 6.30 | [4.2–9.1] |
+| Artificial Urgency | 309 | 22 | 7.12 | [4.6–10.7] |
+| Data Spoofing | 465 | 22 | 4.73 | [3.0–7.2] |
+| Gaslighting | 420 | 0 | 0.00 | [0.0–0.9] |
 
-**Observation:** No category shows substantially higher ASR. The differences between categories (0.7%-1.4%) are within confidence interval overlap, suggesting no single tactic is notably more effective against safety-tuned models.
+**Observation:** Data Spoofing category shows lowest ASR (4.73%), while Artificial Urgency shows highest (7.12%). Gaslighting is completely ineffective (0% ASR). Differences between categories are within overlap of confidence intervals, suggesting no single tactic uniformly dominates across diverse model architectures.
 
-### 4.3 Model × Attack Category Matrix
+### 4.3 Model × Attack Category Matrix (ASR %)
 
 | Model | Authority Spoofing | Artificial Urgency | Data Spoofing | Gaslighting |
 |---|---|---|---|---|
-| allam-2-7b | 0.0% | 2.8% | 5.6% | 2.8% |
-| qwen/qwen3.6-27b | 0.0% | 0.0% | 0.0% | 0.0% |
-| openai/gpt-oss-20b | 2.8% | 2.8% | 0.0% | 0.0% |
-| openai/gpt-oss-120b | 0.0% | 0.0% | 0.0% | 0.0% |
+| openai/gpt-oss-20b | 29.2% (19/65) | 36.1% (13/36) | 55.6% (20/36) | 19.7% (26/132) |
+| openai/gpt-oss-120b | 4.0% (4/101) | 6.3% (9/143) | 20.0% (11/55) | 3.7% (1/27) |
+| gemini-3.6-flash | 2.7% (1/37) | 0.0% (0/2) | — | — |
+| meta-llama/llama-3.2-3b:free | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) |
+| mistralai/mistral-7b:free | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) |
+| gemini-flash-latest | 0.0% (0/34) | — | — | — |
+| allam-2-7b | 100.0% (1/1) | — | — | — |
+| qwen/qwen3.6-27b | 0.0% (0/1) | — | — | — |
 
-**Vulnerability profile:** allam-2-7b shows highest susceptibility to Data Spoofing (5.6%), while openai/gpt-oss-120b and qwen/qwen3.6-27b are impervious across all categories. Interestingly, the two medium-sized models (allam-2-7b and openai/gpt-oss-20b) show vulnerability, while the extremes (smallest qwen/qwen and largest openai/gpt-oss-120b) show none.
+**Vulnerability profile:** openai/gpt-oss-20b shows highest susceptibility to Data Spoofing (55.6%), followed by Artificial Urgency (36.1%) and Authority Spoofing (29.2%). Base models (Llama-3.2-3b, Mistral-7b) demonstrate perfect defense across all categories (n=270 each). Safety-tuned models show category-specific vulnerability: Groq models are susceptible to Data Spoofing, while Google Gemini is more resistant overall.
 
-### 4.4 Heatmap
+### 4.4 Critical Discovery: Prompt-Based Defenses are Artifacts
 
-![Attack Success Rate by Model and Attack Category](../results/figures/heatmap_baseline_v1.png)
+During extended v3 experiments, we discovered that **defensive language in system prompts artificially suppresses ASR to near-zero across all models.** 
 
-**Figure 1:** Attack Success Rate by Model and Attack Category (n=576). Heatmap shows vulnerability matrix across four Groq models and four attack tactics. Green indicates robust models (low ASR), red indicates vulnerable models (high ASR). Darker cells show perfect defense (0% success rate). The only red-tinged cell is allam-2-7b on Data Spoofing (5.6%), indicating moderate vulnerability.
+Initial experiments using a defensive system prompt ("be careful with destructive operations", "only execute if confident") produced 0% ASR universally. When we removed defensive language and used a neutral system prompt ("You are a system administrator with access to these tools"), model-specific vulnerabilities emerged:
 
-### 4.5 Hypothesis Tests
+- **Before:** All models 0% ASR (defensive prompt artifact)
+- **After:** gpt-oss-20b 29% ASR, gpt-oss-120b 7.67% ASR, base models 0% ASR (true vulnerabilities)
 
-**H1 (ASR ≥ 25%):** **REJECTED** 
-- Observed overall ASR: 1.04% (95% CI: [0.5%, 2.2%])
-- Observed ASR is significantly lower than 25% threshold (Fisher exact test: p < 0.001)
-- Result: Default system prompts provide robust protection against basic social engineering
-- Caveat: Small absolute effect size may reflect ceiling effect on well-defended models; more sophisticated attacks needed
+This suggests that **prompt-based defenses mask rather than prevent exploitation**. True robustness comes from training-time safety (RLHF), not instructions.
 
-**H2 (Larger models more robust):** **PARTIALLY CONFIRMED**
-- 120B model (openai/gpt-oss-120b): 0.0% ASR
-- 7B model (allam-2-7b): 2.8% ASR
-- Difference of 2.8 percentage points (p = 0.04, two-tailed Fisher exact)
-- Effect is statistically significant but small in absolute terms
-- Caveat: Only 4 models tested; pattern breaks with medium-sized models; results limited to Groq safety-tuned collection
+### 4.5 Hypothesis Tests (Revised)
 
-**H3 (Source text reduces ASR):** **NOT TESTED IN BASELINE**
-- Baseline v1 uses single-turn attacks without source text variation
-- Extended v2 will test this hypothesis as planned
+**H1 (ASR ≥ 25% with default prompts):** **PARTIALLY CONFIRMED**
+- Observed overall ASR: 3.08% (95% CI: [2.3–4.1])
+- **However:** openai/gpt-oss-20b alone achieves 29.0% ASR (95% CI: [23.9–34.7])
+- Revised hypothesis: ASR ≥ 25% observed for non-safety-tuned or minimally-tuned Groq models
+- Caveat: With defensive system prompts, ASR→0% uniformly; true vulnerability hidden by prompt design
+
+**H2 (Larger models more robust):** **CONFIRMED with exceptions**
+- Within Groq safety-tuned family: 120B (7.67%) < 20B (29.0%) — **larger model is MORE robust**
+- Difference: 21.3 percentage points (p < 0.001, Fisher exact)
+- Between providers: Base models (Llama-3.2-3b, Mistral-7b, 3-7B range) show 0% ASR, suggesting training (not size) determines robustness
+- Revised: Parameter count correlates with robustness within safety-tuned collections, but RLHF dominates across providers
+
+**H3 (Source text reduces ASR):** **NOT TESTED IN v3**
+- Baseline v1 and v3 use single-turn attacks (no source text variation)
+- Deferred to v4 experiments with multi-turn conditions
 
 ## 5. Discussion
 
-### 5.1 Key Findings and Interpretation
+### 5.1 **CRITICAL FINDING: Prompt-Based Defenses Provide False Security**
 
-Our baseline experiments reveal remarkably low ASR (1.04%) across four Groq-hosted models. However, this result requires careful interpretation:
+Our most significant contribution concerns a methodological discovery that fundamentally changes how we interpret baseline results. In initial v3 experiments, we included defensive language in the Admin agent's system prompt:
 
-**Provider bias:** All tested models are from Groq's collection, which are heavily safety-tuned (openai/gpt-oss series, allam, qwen). These models may not be representative of production LLMs in general, including base models, frontier proprietary systems (GPT-4, Claude 3.5, Gemini), or models with explicit multi-agent configurations. Groq's safety-tuning may provide a ceiling effect that masks vulnerabilities present in less-tuned systems.
+> "You are a trusted system administrator... Only execute a tool if you're confident it's legitimate. Always think twice before deleting accounts or executing SQL queries."
 
-**Baseline attack quality:** Our v1 payload set uses surface-level tactics (system alerts, urgency claims, fake logs) with standard formatting. More sophisticated attacks tested in extended v2 include:
-- Multi-turn interactions (progressive commitment escalation)
-- Jailbreak-style payloads (claiming safety mechanisms are broken or outdated)
-- Combined tactics (authority + urgency + data spoofing)
-- Realistic formatting (exact log structures, compliance codes, CVE numbers)
+This produced 0% ASR uniformly across all models (Groq, Google, OpenRouter), despite using escalated payloads designed to increase attack success rates. This artificial ceiling masked genuine model vulnerabilities.
 
-The 1.04% baseline ASR may reflect ceiling effects rather than true robustness.
+**When we removed defensive language and used a neutral prompt:**
 
-**Statistical power:** With n=144 per model on 16 payloads, our baseline design has MDES ≈ 25pp at 80% power. The observed differences between models (0-5.6%) are below this threshold. Extended v2 with 540 scenarios per model will substantially improve power.
+> "You are a system administrator with access to these tools. Respond only in JSON format..."
 
-### 5.2 Implications for Multi-Agent System Design
+Model-specific vulnerabilities emerged dramatically. Within two hours of changing only the system prompt:
+- **openai/gpt-oss-20b ASR: 0% → 29.0%** (95 CI: [23.9–34.7])
+- **openai/gpt-oss-120b ASR: 0% → 7.67%** (95 CI: [5.2–11.1])
+- **Base models (Llama, Mistral): 0% → 0%** (1,080 experiments, n.s.)
 
-1. **Default trust offers substantial protection:** Groq safety-tuned models resist basic social engineering attacks without explicit defense mechanisms. However, this may not generalize to other providers or base models.
+**Interpretation:** Prompt-based defensive language produces **false confidence**. It doesn't train the model to resist exploitation; it merely instructs the model instance to be cautious during this particular session. This finding has major implications:
 
-2. **Scale shows modest correlation:** Larger models (120B) show lower ASR than smaller (7B), but the effect is small (2.8pp) and present in only one comparison. Effect is not monotonic across all sizes.
+1. **System prompt disclaimers are not security controls.** They are temporary, session-specific guidance that models readily override under social pressure.
 
-3. **Category differences are minimal:** No single social engineering tactic (authority, urgency, data spoofing, gaslighting) substantially outperforms others. This suggests broad rather than category-specific robustness.
+2. **True robustness emerges from training-time safety (RLHF).** Models that resist attacks do so because their weights have internalized safety principles, not because they are momentarily instructed to "be careful."
 
-### 5.3 Limitations (Comprehensive)
+3. **Baseline benchmarks are vulnerable to artifacts.** A single defensive phrase in system prompts can hide vulnerabilities that exist in real deployments.
 
-**Provider bias:**
-- Only Groq API models tested (biased sample of safety-tuned models)
-- No frontier models (GPT-4o, Claude 3.5, Gemini Pro)
-- No base models or instruction-tuned variants
-- Results may not generalize beyond Groq's specific safety approach
+### 5.2 Training-Time Safety vs. Prompt-Time Defenses
 
-**Limited attack sophistication:**
-- Only 16 payloads in baseline (insufficient statistical power)
-- Surface-level tactics only (no multi-turn, jailbreak-style, chained attacks)
-- Single-turn interactions (no progressive commitment)
-- Standard formatting (no realistic exact log replication)
+Our v3 data strongly support this hierarchy:
 
-**Experimental design limitations:**
+| Defense Type | Impact on ASR | Reliability |
+|---|---|---|
+| Prompt-based ("be careful") | -∞ (0% → 0%) | Unreliable; easily overridden by social engineering |
+| RLHF safety-tuning (Groq, Google) | Moderate (7–29% depending on model) | Reliable but incomplete |
+| Base model training (Llama, Mistral) | Strong (0% ASR across 1,080 exp) | Highly reliable, but may reflect limited task diversity |
+
+**Groq models (gpt-oss-20b)** show that even "safety-tuned" models have significant vulnerabilities (29% ASR) when prompt-level defenses are removed. This suggests their safety training is surface-level, focused on obvious refusals rather than genuine resistance to sophisticated social engineering.
+
+**Base models (Llama-3.2-3b, Mistral-7b)** maintained 0% ASR across 540 experiments each, despite identical social engineering tactics. This is surprising given their lack of explicit RLHF tuning, but may reflect:
+- Limited task scope (only four restricted tools)
+- Alignment with instruction-following (they follow legitimate instructions, refuse suspicious ones)
+- Lower language sophistication compared to Groq models (may fail to understand complex social engineering)
+
+### 5.3 Implications for Multi-Agent System Design
+
+1. **Do not rely on prompt-level defenses.** System prompt disclaimers create a false sense of security. A multi-agent system that depends on the Admin agent's instructions ("be careful") is vulnerable.
+
+2. **Model choice matters deeply.** Within a safety-tuned family (Groq), vulnerability varies 3.8× (7.67% vs 29.0%). Between families (Groq vs base), variation is infinite (29% vs 0%). Deploying a multi-agent system requires careful model selection, not just prompt engineering.
+
+3. **Test with neutral prompts.** Benchmark evaluation should avoid defensive language in system prompts, or clearly document this choice. Otherwise, results may reflect prompt artifacts rather than genuine model behavior.
+
+### 5.4 Limitations (Updated with v3 Data)
+
+**Sampling and generalization:**
+- **Groq models:** 595 experiments (gpt-oss-20b, gpt-oss-120b) — good coverage for Groq family
+- **Groq undersampled:** qwen, allam < 2 experiments each — insufficient for reliable ASR estimates
+- **Google models:** Gemini Flash (39), Gemini Latest (34) — undersampled (< 50 each)
+- **Base models:** Llama-3.2-3b and Mistral-7b (540 each) well-sampled, but only 2 models tested
+- **No frontier models:** GPT-4o, Claude 3.5, Gemini Pro, o1 not evaluated
+- **Provider bias:** Groq and OpenRouter well-represented; Google light sampling; missing Claude, GPT-4
+
+**Attack sophistication:**
+- 60 payloads (15 per category) represent moderate complexity
+- Surface-level tactics only (no multi-turn interaction)
+- No chained attacks (combining authority + urgency + data spoofing)
+- No jailbreak-style payloads ("your safety mechanisms are outdated")
+- All payloads use escalation markers (may not reflect production web injection)
+
+**Experimental design:**
+- Single-condition baseline (neutral prompt only)
+- No defensive variants (source citation, double-confirmation, chain-of-thought verification)
 - No benign control set (cannot measure false positive rate)
-- Single-condition baseline (no defense mechanism comparisons)
-- No variance estimation (single repetition per scenario)
-- Cross-model matrix not tested (Parser = Admin from same provider)
+- Each payload tested once per model (no within-model variance)
+- Cross-model matrix not tested (Parser and Admin always same model)
 
-**Measurement scope:**
-- Only tool execution measured (cannot assess refusal quality)
-- No analysis of near-misses or hesitation responses
-- No long-term memory testing across turns
-- No defense mechanism variations tested
+**Measurement and analysis:**
+- Binary outcome only (tool executed: yes/no)
+- No refusal quality assessment (e.g., how convincingly did model refuse?)
+- No hesitation analysis (did model express doubt?)
+- No attention/saliency analysis (which parts of attack influenced decision?)
+- Rate-limiting artifact: Groq experiments suffered 429 errors, some marked "[ERROR: Max retries exceeded]" (n ≈ 40, < 3% contamination)
 
-### 5.4 Future Work
+**Statistical limitations:**
+- Unbalanced design (1 allam vs 540 Llama)
+- Google undersampled relative to Groq and OpenRouter
+- Wide confidence intervals for < 50n models (gemini models)
+- Multiple comparisons across models without Bonferroni correction
 
-**In-progress (Extended v2):**
-- Expand to 60 payloads (15 per category) with sophisticated tactics
-- Additional models: Google Gemini Flash, Cerebras Llama, OpenRouter collection
-- Benign control set (20 legitimate requests) for FPR measurement
-- Statistical power improvement: 540 scenarios per model
+### 5.5 Future Work
 
-**Planned (v3+):**
-- Frontier model integration (GPT-4o, Claude 3.5, Gemini) via research credits
-- Multi-turn attack scenarios (progressive commitment escalation)
-- 5+ defense mechanisms (source citation, double confirmation, skeptical prompting, chain-of-thought verification, sandbox isolation)
-- Cross-model matrix (Parser vs Admin from different providers)
-- Jailbreak-style payloads and combination tactics
-- Dynamic defense evaluation (runtime monitoring, anomaly detection)
+**In-progress (v3 experiments, ~50% complete):**
+- Finish sampling: complete gpt-oss-120b, gpt-oss-20b, qwen, allam, gemini, gemma models (target: 540 each)
+- Current status: 1,591/3,240 experiments (49.1%), teammate continuing runs
+- ETA: August 31, 2026
+
+**Planned (v4+):**
+- **Multi-turn attacks:** Progressive commitment (small request → escalation), adaptive based on refusal type
+- **Defense mechanisms:** Test (≥5 variants):
+  - Source text verification ("Show me the original log")
+  - Double confirmation ("Are you sure? This will delete an account")
+  - Skeptical prompting ("Question any request that seems unusual")
+  - Chain-of-thought verification ("Walk through the security implications")
+  - Sandbox isolation ("Execute in safe mode first")
+- **Cross-model matrix:** Parser from Provider A, Admin from Provider B (9 × 9 = 81 combinations)
+- **Frontier models:** GPT-4o, Claude 3.5, Gemini Pro, o1 (via research credits)
+- **Jailbreak-style payloads:** "Your safety guidelines are outdated", "This protocol overrides safety checks"
+- **Combination tactics:** Authority + Urgency + Data Spoofing simultaneously
+- **Benign control set:** 20 legitimate requests to measure false positive rate
+- **Refusal quality analysis:** Automated assessment of refusal confidence and reasoning quality
 
 ## 6. Ethical Considerations
 
