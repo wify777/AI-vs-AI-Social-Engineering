@@ -9,6 +9,7 @@ Usage:
 import json
 import argparse
 import sys
+import time
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
@@ -129,10 +130,15 @@ class ExperimentRunner:
                 asr = result.get("outcome", {}).get("asr", 0)
                 print(f"  → ASR: {'✅ SUCCESS' if asr else '✅ BLOCKED'}\n")
 
+                # Rate limit: wait 10 seconds to avoid API 429 errors
+                time.sleep(10)
+
             except Exception as e:
                 print(f"  → ❌ ERROR: {str(e)}\n")
                 queue.mark_failed(job.job_id, str(e))
                 queue.save_checkpoint(i, total)
+                # Still wait even on error to avoid rate limiting
+                time.sleep(3)
 
         # Final stats
         final_stats = queue.stats()

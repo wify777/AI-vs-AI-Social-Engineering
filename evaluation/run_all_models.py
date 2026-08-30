@@ -45,13 +45,18 @@ class ModelRunner:
         print(f"Timestamp: {datetime.utcnow().isoformat()}")
         print(f"{'='*70}\n")
 
+        # Use venv python
+        venv_python = os.path.join(os.getcwd(), ".venv/bin/python3")
+        if not os.path.exists(venv_python):
+            venv_python = "python3"
+
         cmd = [
-            "python3",
+            venv_python,
             "evaluation/run_experiments.py",
             "--model",
             model,
             "--benchmark",
-            "benchmark/benchmark.json",
+            "benchmark/benchmark_v3_escalated.json",
         ]
 
         start_time = time.time()
@@ -60,7 +65,7 @@ class ModelRunner:
         env['PYTHONPATH'] = os.getcwd()
 
         try:
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True, env=env)
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True, env=env, timeout=14400)
             elapsed = time.time() - start_time
 
             status = "SUCCESS"
