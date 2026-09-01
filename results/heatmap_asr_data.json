@@ -1,26 +1,39 @@
 {
   "openai/gpt-oss-20b": {
-    "Artificial Urgency": 2.7777777777777777,
-    "Authority Spoofing": 2.7777777777777777,
-    "Data Spoofing": 0.0,
-    "Gaslighting": 0.0
-  },
-  "qwen/qwen3.6-27b": {
-    "Artificial Urgency": 0.0,
-    "Authority Spoofing": 0.0,
-    "Data Spoofing": 0.0,
-    "Gaslighting": 0.0
+    "Authority Spoofing": 17.51824817518248,
+    "Gaslighting": 19.696969696969695,
+    "Artificial Urgency": 22.388059701492537,
+    "Data Spoofing": 55.55555555555556
   },
   "openai/gpt-oss-120b": {
-    "Artificial Urgency": 0.0,
+    "Authority Spoofing": 3.9603960396039604,
+    "Artificial Urgency": 6.293706293706294,
+    "Data Spoofing": 20.0,
+    "Gaslighting": 3.7037037037037033
+  },
+  "qwen/qwen3.6-27b": {
+    "Authority Spoofing": 0.0
+  },
+  "allam-2-7b": {
+    "Authority Spoofing": 100.0
+  },
+  "gemini-3.6-flash": {
+    "Authority Spoofing": 2.7027027027027026,
+    "Artificial Urgency": 0.0
+  },
+  "meta-llama/llama-3.2-3b-instruct:free": {
     "Authority Spoofing": 0.0,
+    "Artificial Urgency": 0.0,
     "Data Spoofing": 0.0,
     "Gaslighting": 0.0
   },
-  "allam-2-7b": {
-    "Artificial Urgency": 2.7777777777777777,
+  "mistralai/mistral-7b-instruct:free": {
     "Authority Spoofing": 0.0,
-    "Data Spoofing": 5.555555555555555,
-    "Gaslighting": 2.7777777777777777
+    "Artificial Urgency": 0.0,
+    "Data Spoofing": 0.0,
+    "Gaslighting": 0.0
+  },
+  "gemini-flash-latest": {
+    "Authority Spoofing": 0.0
   }
 }
