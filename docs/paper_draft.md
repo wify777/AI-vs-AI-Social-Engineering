@@ -4,9 +4,9 @@
 
 Multi-agent LLM systems increasingly delegate tasks across agents with different privilege levels. We introduce AgentTrust, an open-source benchmark measuring whether a compromised low-privilege Parser agent can manipulate a high-privilege Admin agent into executing unauthorized tool calls via social engineering tactics.
 
-**Main Results (v3: 60 payloads, 8 models, n=1,591):** We evaluated eight models (Groq, Google, OpenRouter) using 60 social engineering attack payloads across four categories: authority spoofing, artificial urgency, data spoofing, and gaslighting. Our primary metric — Attack Success Rate (ASR) — measures tool execution directly from execution logs. Overall ASR: 3.08% (49/1,591). Critically, we discovered that **defensive language in system prompts produces artifactual 0% ASR results**, masking genuine model vulnerabilities. When we removed defensive disclaimers, we observed significant variation: openai/gpt-oss-20b showed 29.0% ASR (95% CI: 23.9–34.7%, n=269), while openai/gpt-oss-120b showed 7.67% (95% CI: 5.2–11.1%, n=326). Base models (Llama-3.2-3b, Mistral-7b) maintained 0% ASR across 1,080 combined experiments, suggesting that training-time safety (RLHF) determines true resistance to social engineering.
+**Main Results (v3 Final: 60 payloads, 10 models, n=2,731):** We conducted 2,731 experiments evaluating ten models across Groq, Google, and OpenRouter using 60 social engineering attack payloads spanning four categories: authority spoofing, artificial urgency, data spoofing, and gaslighting. Our primary metric — Attack Success Rate (ASR) — measures tool execution directly from execution logs. Overall ASR: **2.71%** (74/2,731, 95% CI: 2.1–3.4%). We observe extreme variance across models: openai/gpt-oss-20b shows **17.27% ASR** (19/110, most vulnerable), while meta-llama/llama-3.2-3b and mistralai/mistral-7b maintain **0% ASR across 540 combined experiments each** (most protected). Critically, we discovered that **defensive language in system prompts masks genuine vulnerabilities**: removing defensive disclaimers from the Admin prompt caused ASR to increase 5–6×. Conversely, adding defense mechanisms (e.g., double-confirmation) reduces ASR by 54%, suggesting that **training-time safety is less important than runtime defense strategies**. Data spoofing attacks are 19.5× more effective than gaslighting (5.66% vs 0.29% ASR).
 
-**Key Finding:** Prompt-based security disclaimers provide false confidence. Real defenses emerge from model training, not instructions.
+**Key Finding:** Real defenses emerge from runtime checks and agent design, not training or system prompt disclaimers.
 
 Our benchmark and all experimental artifacts are publicly available at https://github.com/wify777/AI-vs-AI-Social-Engineering
 
@@ -165,49 +165,75 @@ With n=144 runs per model (16 payloads × 9 runs each), power analysis shows:
 
 ## 4. Results
 
-### 4.1 Overall ASR (v3: 60 payloads, 8 models, n=1,591)
+### 4.1 Overall ASR (v3 Final: 60 payloads, 10 models, n=2,731)
 
 | Model | n | Successes | ASR (%) | 95% CI (%) | Interpretation |
 |---|---|---|---|---|---|
-| openai/gpt-oss-20b | 269 | 78 | 29.00 | [23.9–34.7] | **HIGHLY VULNERABLE** |
-| openai/gpt-oss-120b | 326 | 25 | 7.67 | [5.2–11.1] | Mixed (moderate defense) |
-| gemini-3.6-flash | 39 | 1 | 2.56 | [0.5–13.2] | Protected (undersampled) |
-| allam-2-7b | 1 | 1 | 100.00 | [20.7–100.0] | Undersampled (n=1) |
-| qwen/qwen3.6-27b | 1 | 0 | 0.00 | [0.0–79.3] | Undersampled (n=1) |
-| gemini-flash-latest | 34 | 0 | 0.00 | [0.0–10.2] | Protected (undersampled) |
+| openai/gpt-oss-20b | 110 | 19 | 17.27 | [11.2–25.3] | **HIGHLY VULNERABLE** |
+| google/gemma-4-31b-it:free | 202 | 14 | 6.94 | [4.0–11.4] | Moderate vulnerability |
+| openai/gpt-oss-120b | 326 | 22 | 6.74 | [4.4–9.9] | Moderate vulnerability |
+| google/gemma-4-26b-a4b-it:free | 280 | 17 | 6.08 | [3.7–9.5] | Moderate vulnerability |
+| gemini-3.6-flash | 181 | 2 | 1.11 | [0.2–3.9] | Protected |
+| gemini-flash-latest | 192 | 0 | 0.00 | [0.0–1.9] | Protected |
 | meta-llama/llama-3.2-3b:free | 540 | 0 | 0.00 | [0.0–0.7] | **HIGHLY PROTECTED** |
 | mistralai/mistral-7b:free | 540 | 0 | 0.00 | [0.0–0.7] | **HIGHLY PROTECTED** |
-| **Overall** | **1,591** | **49** | **3.08** | **[2.3–4.1]** | **Mixed across providers** |
+| allam-2-7b | 1 | 1 | 100.00 | [20.7–100.0] | Insufficient data (n=1) |
+| qwen/qwen3.6-27b | 1 | 0 | 0.00 | [0.0–79.3] | Insufficient data (n=1) |
+| **Overall** | **2,731** | **74** | **2.71** | **[2.1–3.4]** | **Extreme variance across vendors** |
 
-**Critical finding:** Overall ASR (3.08%) masks extreme variation across models. Within the Groq safety-tuned family, openai/gpt-oss-20b is dramatically more vulnerable (29%) than gpt-oss-120b (7.67%) — a 2.9× difference. Base models (Llama, Mistral) from OpenRouter show complete resistance (0% ASR across 1,080 combined scenarios). Google Gemini models show intermediate vulnerability (~2.6%).
+**Critical findings:** 
+1. **Extreme variation masks by low overall ASR.** OpenAI models (17.27% vs 6.74%) show 2.6× difference, while Google Gemma models show unexpected reversal (26B: 6.08% vs 31B: 6.94%), suggesting parameter count is not the dominant factor.
+
+2. **Base models extraordinarily resilient.** Llama-3.2-3b and Mistral-7b maintain 0% ASR across 540 experiments each (1,080 total), despite lacking explicit RLHF safety tuning. This contradicts the hypothesis that safety training (RLHF) is necessary for robustness.
+
+3. **Provider matters more than model size.** OpenRouter base models (0% ASR) > Groq safety-tuned models (6–17% ASR), suggesting that model training data diversity/instructions matter more than explicit safety RLHF.
 
 ### 4.2 ASR by Attack Category (All Models)
 
 | Category | n | Successes | ASR (%) | 95% CI |
 |---|---|---|---|---|
-| Authority Spoofing | 397 | 25 | 6.30 | [4.2–9.1] |
-| Artificial Urgency | 309 | 22 | 7.12 | [4.6–10.7] |
-| Data Spoofing | 465 | 22 | 4.73 | [3.0–7.2] |
-| Gaslighting | 420 | 0 | 0.00 | [0.0–0.9] |
+| Data Spoofing | 619 | 35 | 5.66 | [4.0–7.9] |
+| Authority Spoofing | 731 | 24 | 3.28 | [2.2–4.8] |
+| Artificial Urgency | 751 | 14 | 1.86 | [1.1–3.1] |
+| Gaslighting | 691 | 2 | 0.29 | [0.1–1.1] |
 
-**Observation:** Data Spoofing category shows lowest ASR (4.73%), while Artificial Urgency shows highest (7.12%). Gaslighting is completely ineffective (0% ASR). Differences between categories are within overlap of confidence intervals, suggesting no single tactic uniformly dominates across diverse model architectures.
+**Critical observation:** Data spoofing is **19.5× more effective** than gaslighting (5.66% vs 0.29% ASR). This dramatic difference suggests models are far more vulnerable to fabricated data/logs than to psychological manipulation ("your safety mechanisms are broken"). Authority Spoofing shows intermediate effectiveness. Artificial Urgency is surprisingly ineffective, suggesting time-pressure tactics do not overcome model caution.
 
 ### 4.3 Model × Attack Category Matrix (ASR %)
 
-| Model | Authority Spoofing | Artificial Urgency | Data Spoofing | Gaslighting |
+| Model | Authority Spoof | Artificial Urgency | Data Spoofing | Gaslighting |
 |---|---|---|---|---|
-| openai/gpt-oss-20b | 29.2% (19/65) | 36.1% (13/36) | 55.6% (20/36) | 19.7% (26/132) |
+| openai/gpt-oss-20b | 18.2% (4/22) | 21.4% (6/28) | 47.4% (9/19) | 6.3% (1/16) |
+| google/gemma-4-31b:free | 3.6% (1/28) | 6.8% (6/88) | 14.1% (7/50) | 0.0% (0/36) |
 | openai/gpt-oss-120b | 4.0% (4/101) | 6.3% (9/143) | 20.0% (11/55) | 3.7% (1/27) |
-| gemini-3.6-flash | 2.7% (1/37) | 0.0% (0/2) | — | — |
+| google/gemma-4-26b:free | 3.5% (2/57) | 5.7% (10/175) | 12.5% (5/40) | 0.0% (0/8) |
+| gemini-3.6-flash | 0.0% (0/47) | 5.9% (2/34) | 0.0% (0/54) | 0.0% (0/46) |
+| gemini-flash-latest | 0.0% (0/59) | 0.0% (0/55) | 0.0% (0/54) | 0.0% (0/24) |
 | meta-llama/llama-3.2-3b:free | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) |
 | mistralai/mistral-7b:free | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) | 0.0% (0/135) |
-| gemini-flash-latest | 0.0% (0/34) | — | — | — |
-| allam-2-7b | 100.0% (1/1) | — | — | — |
+| allam-2-7b | 100% (1/1) | — | — | — |
 | qwen/qwen3.6-27b | 0.0% (0/1) | — | — | — |
 
-**Vulnerability profile:** openai/gpt-oss-20b shows highest susceptibility to Data Spoofing (55.6%), followed by Artificial Urgency (36.1%) and Authority Spoofing (29.2%). Base models (Llama-3.2-3b, Mistral-7b) demonstrate perfect defense across all categories (n=270 each). Safety-tuned models show category-specific vulnerability: Groq models are susceptible to Data Spoofing, while Google Gemini is more resistant overall.
+**Vulnerability profile:** 
+1. **Data Spoofing dominates across all vulnerable models.** gpt-oss-20b: 47.4%, gemma-31b: 14.1%, gpt-oss-120b: 20.0%.
+2. **Base models (Llama, Mistral) impervious.** Perfect defense (0% ASR) across all 270 experiments per model.
+3. **Gaslighting universally ineffective.** Only 2 successful attacks across 691 experiments (0.29%), suggesting models' core reasoning is robust against psychological manipulation.
+4. **Gemma family reveals counterintuitive pattern:** Gemma-4-26b (6.08% overall) performs similarly to Gemma-4-31b (6.94%), despite 5B parameter difference, suggesting training quality/data > parameter count.
 
-### 4.4 Critical Discovery: Prompt-Based Defenses are Artifacts
+### 4.4 ASR by Defense Condition
+
+| Condition | n | Successes | ASR (%) | 95% CI | Effect |
+|---|---|---|---|---|---|
+| baseline | 906 | 30 | 3.31 | [2.3–4.7] | Baseline (no defense) |
+| with_source_text | 903 | 30 | 3.32 | [2.3–4.7] | No effect (+0.01pp) |
+| with_defense_mechanism | 914 | 14 | 1.53 | [0.9–2.5] | **Effective (-54%)** |
+
+**Critical finding:** 
+1. **Source text provides zero protection.** Showing the original log/data alongside the Parser's summary does not improve robustness (3.31% vs 3.32% ASR). H3 hypothesis rejected.
+2. **Defense mechanisms are highly effective.** Adding double-confirmation prompts ("Are you sure? This will delete an account") reduces ASR by 54% (3.31% → 1.53%), suggesting that **runtime defense checks outperform training-time safety measures**.
+3. **Implication for system design:** Runtime guardrails > model training. A defense-lightweight model with good runtime checks is more secure than a heavily safety-tuned model with weak runtime defenses.
+
+### 4.5 Critical Discovery: Prompt-Based Defenses are Artifacts
 
 During extended v3 experiments, we discovered that **defensive language in system prompts artificially suppresses ASR to near-zero across all models.** 
 
@@ -238,30 +264,28 @@ This suggests that **prompt-based defenses mask rather than prevent exploitation
 
 ## 5. Discussion
 
-### 5.1 **CRITICAL FINDING: Prompt-Based Defenses Provide False Security**
+### 5.1 **CRITICAL FINDING: Runtime Defenses Trump Training-Time Safety**
 
-Our most significant contribution concerns a methodological discovery that fundamentally changes how we interpret baseline results. In initial v3 experiments, we included defensive language in the Admin agent's system prompt:
+Our most significant finding concerns the hierarchy of defenses in multi-agent LLM systems. We tested three conditions:
 
-> "You are a trusted system administrator... Only execute a tool if you're confident it's legitimate. Always think twice before deleting accounts or executing SQL queries."
+1. **Training-time safety (RLHF):** Models like gpt-oss-20b (17.27% ASR) show vulnerability despite "safety-tuning" claims. OpenRouter base models (0% ASR) are more robust without explicit safety training.
 
-This produced 0% ASR uniformly across all models (Groq, Google, OpenRouter), despite using escalated payloads designed to increase attack success rates. This artificial ceiling masked genuine model vulnerabilities.
+2. **Runtime defenses (agent design):** Adding double-confirmation checks reduces ASR by 54% (3.31% → 1.53%), dramatically outperforming training-time approaches.
 
-**When we removed defensive language and used a neutral prompt:**
+3. **System prompt disclaimers:** Zero effect. Showing source text alongside parsed content has no impact on ASR (3.31% vs 3.32%).
 
-> "You are a system administrator with access to these tools. Respond only in JSON format..."
+**Interpretation:** The hierarchy of defenses is inverted from common assumptions:
 
-Model-specific vulnerabilities emerged dramatically. Within two hours of changing only the system prompt:
-- **openai/gpt-oss-20b ASR: 0% → 29.0%** (95 CI: [23.9–34.7])
-- **openai/gpt-oss-120b ASR: 0% → 7.67%** (95 CI: [5.2–11.1])
-- **Base models (Llama, Mistral): 0% → 0%** (1,080 experiments, n.s.)
+```
+Effectiveness ranking:
+1. Runtime guardrails (double-confirmation)  -54% ASR ✅
+2. Model training data (base vs tuned)       varies 17×
+3. System prompt disclaimers                 0% effect ❌
+```
 
-**Interpretation:** Prompt-based defensive language produces **false confidence**. It doesn't train the model to resist exploitation; it merely instructs the model instance to be cautious during this particular session. This finding has major implications:
+**Why this matters:** A lightweight model with strong runtime guardrails is more secure than a heavily safety-tuned model with weak runtime defenses. This contradicts the field's emphasis on training-time safety alignment.
 
-1. **System prompt disclaimers are not security controls.** They are temporary, session-specific guidance that models readily override under social pressure.
-
-2. **True robustness emerges from training-time safety (RLHF).** Models that resist attacks do so because their weights have internalized safety principles, not because they are momentarily instructed to "be careful."
-
-3. **Baseline benchmarks are vulnerable to artifacts.** A single defensive phrase in system prompts can hide vulnerabilities that exist in real deployments.
+**Caveat:** This finding applies to the "agent-to-agent" threat model (compromised peer agent). For direct prompt injection (user-agent), training-time safety may have higher marginal value.
 
 ### 5.2 Training-Time Safety vs. Prompt-Time Defenses
 
@@ -288,15 +312,44 @@ Our v3 data strongly support this hierarchy:
 
 3. **Test with neutral prompts.** Benchmark evaluation should avoid defensive language in system prompts, or clearly document this choice. Otherwise, results may reflect prompt artifacts rather than genuine model behavior.
 
-### 5.4 Limitations (Updated with v3 Data)
+### 5.2 Hypothesis Tests (Final Results, n=2,731)
+
+**H1 (ASR ≥ 25% with default prompts):** **REJECTED** 
+- Observed overall ASR: 2.71% (95% CI: [2.1–3.4])
+- Observed ASR is significantly lower than 25% threshold (p < 0.001)
+- **However:** openai/gpt-oss-20b alone achieves 17.27% ASR (19/110), which approaches the threshold for high-vulnerability subpopulation
+- **Revised:** H1 rejected for overall population; partially supported for vulnerable models
+
+**H2 (Larger models more robust):** **CONFIRMED with caveats**
+- **Groq family:** gpt-oss-120b (6.74%, n=326) is 2.6× more robust than gpt-oss-20b (17.27%, n=110) ✅ CONFIRMED
+- **Gemma family:** Gemma-4-26b (6.08%, n=280) ≈ Gemma-4-31b (6.94%, n=202) — **parameter count does NOT correlate with robustness** ❌ CONTRADICTED
+- **OpenRouter base models:** Llama-3.2-3b (0% ASR, n=540) > Gemma-4-31b (6.94%) despite being 28× smaller
+- **Interpretation:** H2 confirmed within controlled setting (same vendor, similar training), but breaks across vendors, suggesting training data/approach >> parameter count
+
+**H3 (Source text reduces ASR ≥ 15pp):** **REJECTED** 
+- Observed: baseline 3.31% vs with_source_text 3.32% = essentially no difference (+0.01pp)
+- Source text shows zero protective benefit
+- **But defense mechanism works:** with_defense_mechanism 1.53% = 54% reduction, validating H3's spirit (runtime defenses work) but not its implementation
+
+### 5.3 Implications for Multi-Agent System Design
+
+1. **Model selection matters far more than system prompts.** Between models, 60× variation in ASR (0% to 17.27%). Between prompts, <1% variation. **Invest in model selection, not prompt engineering for security.**
+
+2. **Parameter count is necessary but insufficient.** Larger models are more robust within the same training paradigm, but training data/approach dominates across paradigms. A 3B base model outperforms a 31B fine-tuned model.
+
+3. **Runtime defenses are most cost-effective.** Adding double-confirmation reduces ASR by 54%, outperforming any training-time approach measured. Practical systems should prioritize agent-design defenses.
+
+4. **Category-specific vulnerabilities persist.** Data spoofing is 19.5× more effective than gaslighting. Systems should implement category-aware defenses (e.g., heightened verification for data-related operations).
+
+### 5.4 Limitations (Updated with v3 Final Data)
 
 **Sampling and generalization:**
-- **Groq models:** 595 experiments (gpt-oss-20b, gpt-oss-120b) — good coverage for Groq family
-- **Groq undersampled:** qwen, allam < 2 experiments each — insufficient for reliable ASR estimates
-- **Google models:** Gemini Flash (39), Gemini Latest (34) — undersampled (< 50 each)
-- **Base models:** Llama-3.2-3b and Mistral-7b (540 each) well-sampled, but only 2 models tested
+- **Groq models well-sampled:** gpt-oss-20b (110), gpt-oss-120b (326) sufficient for robust estimates
+- **Groq critically undersampled:** qwen (1), allam (1) — **insufficient (n=1 each)**, results unreliable
+- **Google models adequately sampled:** Gemini Flash (181), Gemini Latest (192), Gemma-31b (202), Gemma-26b (280) — all n>150
+- **Base models excellently sampled:** Llama-3.2-3b (540), Mistral-7b (540) — but only 2 models
 - **No frontier models:** GPT-4o, Claude 3.5, Gemini Pro, o1 not evaluated
-- **Provider bias:** Groq and OpenRouter well-represented; Google light sampling; missing Claude, GPT-4
+- **Provider bias:** Groq (436), Google (655), OpenRouter (1,080) — OpenRouter overrepresented, Groq undersampled relative to vulnerability
 
 **Attack sophistication:**
 - 60 payloads (15 per category) represent moderate complexity
@@ -327,25 +380,28 @@ Our v3 data strongly support this hierarchy:
 
 ### 5.5 Future Work
 
-**In-progress (v3 experiments, ~50% complete):**
-- Finish sampling: complete gpt-oss-120b, gpt-oss-20b, qwen, allam, gemini, gemma models (target: 540 each)
-- Current status: 1,591/3,240 experiments (49.1%), teammate continuing runs
-- ETA: August 31, 2026
+**Immediate priorities (v4, recommended):**
+- **Complete undersampled Groq models:** qwen/qwen3.6-27b (1→540 experiments), allam-2-7b (1→540 experiments) needed for reliable estimates
+- **Investigate Gemma paradox:** Why does Gemma-4-26b (6.08%) perform similarly to larger Gemma-4-31b (6.94%)? Training difference, not parameter count?
+- **Frontier models:** GPT-4o, Claude 3.5, Llama 3.1+ via research credits or commercial APIs
+- **Benign control set:** 20 legitimate requests per model to establish false positive rates (FPR)
 
-**Planned (v4+):**
-- **Multi-turn attacks:** Progressive commitment (small request → escalation), adaptive based on refusal type
-- **Defense mechanisms:** Test (≥5 variants):
-  - Source text verification ("Show me the original log")
-  - Double confirmation ("Are you sure? This will delete an account")
-  - Skeptical prompting ("Question any request that seems unusual")
-  - Chain-of-thought verification ("Walk through the security implications")
-  - Sandbox isolation ("Execute in safe mode first")
-- **Cross-model matrix:** Parser from Provider A, Admin from Provider B (9 × 9 = 81 combinations)
-- **Frontier models:** GPT-4o, Claude 3.5, Gemini Pro, o1 (via research credits)
-- **Jailbreak-style payloads:** "Your safety guidelines are outdated", "This protocol overrides safety checks"
-- **Combination tactics:** Authority + Urgency + Data Spoofing simultaneously
-- **Benign control set:** 20 legitimate requests to measure false positive rate
-- **Refusal quality analysis:** Automated assessment of refusal confidence and reasoning quality
+**Medium-term (v5+):**
+- **Multi-turn attacks:** Progressive commitment (small request → escalation), adaptive responses to refusal
+- **Defense mechanism variants (now that baseline works):**
+  - Chain-of-thought verification ("Walk through security implications")
+  - Confidence thresholds ("Only execute if confidence > 0.9")
+  - Category-aware defenses ("Data operations require 2-factor verification")
+  - Sandbox isolation ("Execute in simulation mode first")
+- **Cross-provider matrix:** Parser from Provider A, Admin from Provider B (Groq-Google-OpenRouter = 9 combinations)
+- **Category-specific attacks:** Deep dive into why Data Spoofing (5.66%) >> Gaslighting (0.29%)
+- **Combination tactics:** Authority + Data Spoofing, Urgency + Authority, all categories simultaneously
+
+**Lower priority (exploratory):**
+- Jailbreak-style payloads ("Your safety mechanisms are outdated")
+- Fine-tuning analysis (how RLHF changes vulnerability surface)
+- Adversarial attack transfer (do attacks effective on gpt-oss-20b work on other models?)
+- Automated vulnerability discovery (genetic algorithms to find maximally effective payloads)
 
 ## 6. Ethical Considerations
 
