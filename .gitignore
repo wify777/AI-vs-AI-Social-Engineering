@@ -435,6 +435,8 @@ FodyWeavers.xsd
 *.msm
 *.msp
 sandbox/logs/
+# Published for reproducibility; scrubbed of credentials before each commit.
+!sandbox/logs/attacks.jsonl
 evaluation/queues/
 
 # Backups of env files (contain live credentials)
