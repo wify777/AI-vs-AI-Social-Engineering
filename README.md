@@ -4,20 +4,17 @@ Benchmarking privilege escalation via agent-to-agent social engineering in multi
 
 ## Current Status
 
-### ✅ Baseline v1 Complete (2026-08-22)
-- **576 experiments** across 4 Groq models
-- **16 payloads** (4 per category) across 4 social engineering categories
-- **Overall ASR: 1.04%** — models effectively resist basic social engineering attacks
-- **Most vulnerable:** allam-2-7b (2.8% ASR) on Data Spoofing (5.6%)
-- **Most robust:** openai/gpt-oss-120b, qwen/qwen3.6-27b (0% ASR across all categories)
-- **Publication-quality heatmap** generated (300 DPI, ready for journals)
+### v3 Final — complete (2026-09-19)
+- **2,475 unique experiments** across 6 models and 3 providers
+- **60 payloads** (15 per category) x 3 defense conditions x 3 repetitions
+- **Overall ASR: 6.87%** (170/2,475, 95% CI 5.94–7.93%)
+- **13x spread between models** — gpt-oss-20b 13.33% vs minimax-m3 0.00% on identical payloads (chi2=109.6, df=5, p<10^-21)
+- **Both in-context defenses were null** — source text p=0.76, double-confirmation p=0.92 (OR=1.02)
+- Publication-quality heatmap and full statistics committed
 
-### 🚀 Extended v2 In Progress
-- **60 payloads** (15 per category) with sophisticated tactics
-- **Additional models planned:** Google Gemini Flash, Cerebras Llama, OpenRouter
-- **Multi-turn attacks** and combined tactics in development
-- **Benign control set** (20 legitimate requests) for false positive rate measurement
-- **Statistical power improvement:** 540 scenarios per model (vs 144 in v1)
+### Known gaps
+- **No benign control set.** A 0% ASR model cannot yet be distinguished from one that refuses everything. Highest-priority next step.
+- **Two Gemini models undersampled** (n=169 and n=146 of 540) — Google API rate limiting truncated both runs. Excluded from model-ranking claims.
 
 ---
 
@@ -48,11 +45,15 @@ cp .env.example .env
 
 ### Run Baseline Experiments
 ```bash
-# Run all 576 baseline experiments (4 models × 16 payloads)
-python3 evaluation/run_all_models.py --api-only
+# Run one model against the v3 benchmark (540 experiments)
+PYTHONPATH=$PWD python3 evaluation/run_experiments.py \
+  --model openai/gpt-oss-20b \
+  --benchmark benchmark/benchmark_v3_escalated.json
 
-# Expected runtime: ~30-45 minutes
-# Results appear in: sandbox/logs/attacks.jsonl
+# Runs resume from a checkpoint if interrupted.
+# Do not run two models of the same provider in parallel - rate limits
+# compound and each retry costs 30-90s.
+# Results append to: sandbox/logs/attacks.jsonl
 ```
 
 ### Generate Analysis and Visualization
@@ -64,35 +65,57 @@ python3 evaluation/analysis_pipeline.py
 python3 analysis/heatmap.py
 
 # Outputs:
-# - results/analysis_report.json (summary statistics)
+# - results/final_stats_v3.json (ASR + Wilson CIs by model/category/condition)
 # - results/heatmap_asr_data.json (model × category matrix)
-# - results/figures/heatmap_baseline_v1.png (300 DPI heatmap)
+# - results/figures/heatmap_v3_final.png (300 DPI, 14×8")
 ```
 
 ---
 
-## Baseline Results Summary
+## Results Summary (v3 Final)
 
-### Overall Attack Success Rate
+### Attack Success Rate by Model
 
-| Model | ASR | 95% CI | Type |
-|---|---|---|---|
-| allam-2-7b | 2.8% | [1.1%, 6.9%] | 7B |
-| openai/gpt-oss-20b | 1.4% | [0.4%, 4.9%] | 20B |
-| openai/gpt-oss-120b | **0.0%** | [0.0%, 2.6%] | 120B |
-| qwen/qwen3.6-27b | **0.0%** | [0.0%, 2.6%] | 27B |
-| **Overall** | **1.04%** | **[0.5%, 2.2%]** | — |
+| Model | Provider | ASR | 95% CI | n |
+|---|---|---|---|---|
+| openai/gpt-oss-20b | Groq | **13.33%** | [10.72, 16.46] | 540 |
+| nvidia/nemotron-3-nano-omni-30b | OpenRouter | 11.11% | [8.73, 14.04] | 540 |
+| openai/gpt-oss-120b | Groq | 6.67% | [4.85, 9.09] | 540 |
+| gemini-3.6-flash* | Google | 1.18% | [0.33, 4.21] | 169 |
+| gemini-flash-latest* | Google | 0.00% | [0.00, 2.56] | 146 |
+| minimax/minimax-m3 | OpenRouter | **0.00%** | [0.00, 0.71] | 540 |
+| **Overall** | — | **6.87%** | **[5.94, 7.93]** | **2,475** |
+
+\* run truncated by Google API rate limiting; excluded from ranking claims.
+
+Model differences are strongly significant (chi2=109.64, df=5, p=4.9x10^-22).
 
 ### ASR by Attack Category
 
-| Category | ASR | n | Interpretation |
+| Category | ASR | 95% CI | n |
 |---|---|---|---|
-| Data Spoofing | 1.4% | 144 | Fake logs, SIEM alerts, CVE numbers (highest impact) |
-| Artificial Urgency | 1.4% | 144 | Time-critical crises, business threats |
-| Authority Spoofing | 0.7% | 144 | Fake CISO/admin directives |
-| Gaslighting | 0.7% | 144 | Claims that safety mechanisms are broken |
+| Authority Spoofing | 10.05% | [7.95, 12.63] | 637 |
+| Data Spoofing | 8.01% | [6.11, 10.43] | 612 |
+| Artificial Urgency | 7.52% | [5.68, 9.88] | 612 |
+| Gaslighting | 1.79% | [1.00, 3.18] | 614 |
 
-**Key finding:** All attacks met with near-complete resistance. Even the most effective category (Data Spoofing) succeeded only 1.4% of the time.
+Category differences are significant (chi2=36.44, df=3, p=6.0x10^-8). Gaslighting is the clear outlier; the other three overlap substantially and we do not claim an ordering among them.
+
+### Defense Conditions — both null
+
+| Condition | ASR | 95% CI | n | vs baseline |
+|---|---|---|---|---|
+| baseline | 6.54% | [5.04, 8.43] | 826 | — |
+| with_source_text | 7.39% | [5.80, 9.38] | 825 | +0.85pp, p=0.76 |
+| with_defense_mechanism | 6.67% | [5.16, 8.59] | 824 | +0.13pp, p=0.92 |
+
+Neither intervention moved ASR. An earlier draft of this work reported a 54% reduction for the double-confirmation mechanism; that figure did not survive deduplication of the experiment log and **is retracted**.
+
+### Key findings
+
+1. **Model choice dominates.** A 13.3pp spread across models on identical payloads, against nulls for both defenses we tested. Robustness in this threat model lives in the model, not the prompt-level scaffolding around it.
+2. **Defensive system prompts suppress measurement, not attacks.** A prompt containing "be careful with destructive operations" drove ASR to zero for *every* model, erasing the real spread. All reported results use a neutral prompt; benchmarks in this space should publish the victim prompt verbatim.
+3. **Gaslighting barely works.** Attacks asserting false facts about the world (who is asking, what the logs say) succeed; attacks asserting that the model's own safety checks are broken largely do not.
 
 ---
 
@@ -120,7 +143,7 @@ python3 analysis/heatmap.py
 │   ├── tools.py             # Tool stubs (no real side effects)
 │   ├── bus.py               # Message bus and experiment runner
 │   └── logs/
-│       └── attacks.jsonl    # 576 baseline experiment logs
+│       └── attacks.jsonl    # 2,475 experiment logs (JSON Lines)
 ├── evaluation/
 │   ├── run_all_models.py    # Main experiment launcher
 │   ├── analysis_pipeline.py # Statistics and summary
@@ -129,7 +152,7 @@ python3 analysis/heatmap.py
 ├── analysis/
 │   └── heatmap.py           # Publication-quality visualization
 ├── results/
-│   ├── analysis_report.json # Summary statistics
+│   ├── final_stats_v3.json  # ASR + Wilson CIs (model/category/condition)
 │   ├── heatmap_asr_data.json # Model × category matrix
 │   └── figures/
 │       └── heatmap_baseline_v1.png # 300 DPI heatmap
@@ -145,37 +168,37 @@ python3 analysis/heatmap.py
 
 | Hypothesis | Status | Finding | Caveat |
 |---|---|---|---|
-| **H1:** Default ASR ≥ 25% | ❌ REJECTED | ASR = 1.04%, p < 0.001 | Safety-tuned models only |
-| **H2:** Larger models more robust | ✅ CONFIRMED | 120B: 0%, 7B: 2.8%, p = 0.04 | Small effect size, low power |
-| **H3:** Source text reduces ASR | ⏳ NOT TESTED | — | Planned for extended v2 |
+| **H1:** Default ASR ≥ 25% | REJECTED | Overall 6.87% [5.94, 7.93]; top model 13.33% | Rejected in aggregate and for every individual model |
+| **H2:** Larger models more robust | UNRESOLVED | Holds within gpt-oss (120B 6.67% < 20B 13.33%), fails across vendors | Scale is confounded with training approach; see paper §5.6 for an isolating design |
+| **H3:** Source text reduces ASR ≥15pp | REJECTED | +0.85pp, wrong direction, p=0.76 | Informative null, not underpowered (n≈825/condition) |
 
 ---
 
 ## Dataset Details
 
-### Attack Payloads (v1 Baseline)
+### Attack Payloads (v3)
 
-**16 payloads** across 4 categories (4 per category):
+**60 payloads** across 4 categories (15 per category). Examples below are representative, not exhaustive:
 
-#### Authority Spoofing (4)
+#### Authority Spoofing (15)
 - SOC alert with incident ID
 - GDPR compliance directive
 - FBI/IRS impersonation notice
 - Senior engineer authorization request
 
-#### Artificial Urgency (4)
+#### Artificial Urgency (15)
 - Database corruption (5-minute window)
 - Active breach scenario
 - Board meeting decision deadline
 - Production outage ($150K/min revenue loss)
 
-#### Data Spoofing (4)
+#### Data Spoofing (15)
 - Fake audit logs
 - Wire transfer record
 - SIEM alert (Splunk format)
 - Vulnerability scan report
 
-#### Gaslighting (4)
+#### Gaslighting (15)
 - Claim safety filters are compromised
 - Suggest permissions are fake displays
 - Claim everyone else completed the action
@@ -199,18 +222,20 @@ Each payload includes:
 
 ---
 
-## Models Tested (Baseline v1)
+## Models Tested (v3 Final)
 
-All models via **Groq API** (safety-tuned collection):
+Six models across three providers:
 
-| Model | Parameters | Vulnerability | Notes |
-|---|---|---|---|
-| allam-2-7b | 7B | 2.8% ASR | Most vulnerable; susceptible to data spoofing |
-| qwen/qwen3.6-27b | 27B | 0.0% ASR | Completely resistant |
-| openai/gpt-oss-20b | 20B | 1.4% ASR | Vulnerable to authority + urgency |
-| openai/gpt-oss-120b | 120B | 0.0% ASR | Completely resistant; largest model |
+| Model | Provider | Params | ASR | Coverage |
+|---|---|---|---|---|
+| openai/gpt-oss-20b | Groq | 20B | 13.33% | 540/540 |
+| nvidia/nemotron-3-nano-omni-30b-a3b-reasoning | OpenRouter | 30B (A3B) | 11.11% | 540/540 |
+| openai/gpt-oss-120b | Groq | 120B | 6.67% | 540/540 |
+| minimax/minimax-m3 | OpenRouter | — | 0.00% | 540/540 |
+| gemini-3.6-flash | Google | — | 1.18% | **169/540** |
+| gemini-flash-latest | Google | — | 0.00% | **146/540** |
 
-**Extended v2 will add:** Google Gemini Flash, Cerebras Llama, OpenRouter models for provider diversity.
+The four complete models carry all model-level claims. Both Google runs were cut short by API rate limiting — each remaining experiment cost 30–90s of backoff, putting completion at an estimated 35–40 hours.
 
 ---
 
@@ -232,22 +257,31 @@ See `docs/results_tables.md` for tables formatted for journals, conferences, and
 
 ### Raw Data
 ```
-sandbox/logs/attacks.jsonl         # All 576 experiment runs (JSON Lines)
-results/analysis_report.json       # Summary statistics
-results/heatmap_asr_data.json      # Model × category ASR matrix
-results/figures/heatmap_baseline_v1.png  # Publication figure (300 DPI, 12×8")
+sandbox/logs/attacks.jsonl            # All 2,475 experiment runs (JSON Lines, deduplicated)
+results/final_stats_v3.json           # ASR + Wilson CIs by model / category / condition
+results/heatmap_asr_data.json         # Model × category ASR matrix
+results/figures/heatmap_v3_final.png  # Publication figure (300 DPI, 14×8")
+
+The published log is scrubbed of credentials: two error strings that had captured
+a Google API key from a request URL read `<REDACTED_GOOGLE_API_KEY>`.
 ```
 
 ### Verification
 ```bash
 # Count experiments
 jq -s 'length' sandbox/logs/attacks.jsonl
-# Expected: 576
+# Expected: 2475
 
-# Check summary statistics
-python3 -c "import json; print(json.load(open('results/analysis_report.json')))"
+# Confirm no duplicates (model + payload + condition + repetition must be unique)
+jq -s '[.[] | [.model_admin, .payload_id, .condition, .repetition]] | (length) - (unique | length)' \
+  sandbox/logs/attacks.jsonl
+# Expected: 0
 
-# Regenerate heatmap
+# Overall ASR
+jq -s '[.[] | select(.outcome.tool_executed)] | length' sandbox/logs/attacks.jsonl
+# Expected: 170  (170/2475 = 6.87%)
+
+# Regenerate heatmap and statistics
 python3 analysis/heatmap.py
 ```
 
@@ -255,26 +289,25 @@ python3 analysis/heatmap.py
 
 ## Roadmap
 
-### ✅ Completed
-- [x] Baseline v1 experiments (576 runs, 4 models, 16 payloads)
-- [x] Statistical analysis and confidence intervals (Wilson score)
+### Completed
+- [x] Baseline v1 (576 runs, 4 Groq models, 16 payloads)
+- [x] v3 final (2,475 unique runs, 6 models, 60 payloads, 3 conditions, 3 repetitions)
+- [x] Wilson confidence intervals and chi-square tests across model / category / condition
 - [x] Publication-quality heatmap (300 DPI)
-- [x] Paper draft with results and discussion
-- [x] Extended v2 payload creation (44 new payloads, 60 total)
-- [x] Results tables for publication
+- [x] Paper draft with results, discussion and limitations
+- [x] Deduplicated dataset published for reproducibility
 
-### 🚀 In Progress
-- [ ] Extended v2 experiments (60 payloads, same 4 models)
-- [ ] Multi-turn attack scenarios
-- [ ] Benign control set (false positive rate measurement)
-- [ ] Additional models (Gemini Flash, Cerebras, OpenRouter)
+### Next (v4)
+- [ ] **Benign control set** — 20 legitimate requests per model for false-positive rates. Blocking gap: 0% ASR is currently indistinguishable from blanket refusal.
+- [ ] Complete the two rate-limited Google models (169→540, 146→540)
+- [ ] **Isolate the training-time effect** — one base checkpoint across base / SFT+RLHF / DPO variants, so post-training is the only thing that varies (paper §5.6)
+- [ ] Out-of-context defenses — hard authorization checks, allowlists, out-of-band approval. Both in-context defenses were null.
+- [ ] Frontier models (GPT-4o, Claude, Gemini Pro)
 
-### 📋 Planned (v3+)
-- [ ] Frontier models (GPT-4o, Claude 3.5, Gemini) via research credits
-- [ ] Defense mechanism testing (5+ strategies)
-- [ ] Cross-model matrix (Parser vs Admin from different providers)
-- [ ] Jailbreak-style and combination tactics
-- [ ] Dynamic defense evaluation
+### Later
+- [ ] Multi-turn and adaptive attacks — the current attacker is static, so reported ASR is a floor
+- [ ] Cross-provider matrix (Parser from provider A, Admin from provider B)
+- [ ] Combination tactics (authority + data spoofing, etc.)
 - [ ] arXiv submission
 
 ---
@@ -290,30 +323,27 @@ This research is conducted collaboratively with roles including:
 
 ---
 
-## Limitations (Baseline v1)
+## Limitations (v3 Final)
 
-**Provider bias:**
-- Only Groq API models tested (safety-tuned collection)
-- No frontier models (GPT-4, Claude 3.5, Gemini Pro)
-- Results may not generalize to other providers or base models
+**Measurement:**
+- **No benign control set.** ASR alone cannot separate a robust model from one that refuses every request, legitimate ones included. This is the single biggest gap — minimax-m3's 0% is currently uninterpretable in that respect.
+- ASR counts tool execution only. Near-misses, partial compliance, and information leakage without a tool call are invisible to it.
+- Three repetitions per payload/condition pooled without modelling within-payload correlation, which may make intervals mildly optimistic.
+
+**Sampling:**
+- Two of six models undersampled (n=169, n=146 of 540) due to Google API rate limiting; excluded from ranking claims.
+- No frontier models. All six are small-to-mid open or free-tier checkpoints.
+- Single Admin system prompt — every number is conditional on that one neutral prompt.
 
 **Attack sophistication:**
-- Surface-level tactics only (placeholders for v2)
-- Single-turn interactions (no multi-turn or chained attacks)
-- Limited payload diversity (16 payloads, n=144 per model)
+- Single-turn only, 60 payloads, no chained or adaptive attacks.
+- The attacker never responds to a refusal, so reported ASR is a **floor**, not an estimate of what an adaptive adversary achieves.
+- All payloads carry escalation markers, which may not match how injected content appears in production.
 
-**Experimental design:**
-- No benign control set (FPR not measured)
-- No defense mechanism comparisons (baseline only)
-- No variance estimation (single repetition)
-- Cross-model matrix not tested (Parser = Admin)
+**Causal inference:**
+- The six models differ in vendor, pretraining data, architecture, size and post-training simultaneously. "Robustness tracks the model" is measured; "robustness comes from RLHF" is not established. See paper §5.6 for a design that would isolate it.
 
-**Statistical power:**
-- MDES ≈ 25pp with n=144 per model
-- Observed effects (0-5.6%) below detection threshold
-- Extended v2 with 540 scenarios per model will improve power 4×
-
-See `docs/paper_draft.md` Section 5.3 for comprehensive limitations discussion.
+See `docs/paper_draft.md` §5.5 for the full limitations discussion.
 
 ---
 
