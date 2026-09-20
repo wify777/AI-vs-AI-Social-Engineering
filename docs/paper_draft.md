@@ -38,7 +38,7 @@ We introduce AgentTrust, a benchmark that tests the **inter-agent trust boundary
 
 2. A **taxonomy of four social engineering categories** adapted from human social engineering literature: authority spoofing, artificial urgency, data fabrication, and gaslighting.
 
-3. A **benchmark dataset** of 60 attack payloads (15 per category) plus 20 benign control requests for false positive measurement.
+3. A **benchmark dataset** of 60 attack payloads (15 per category), released with the full experiment log. A benign control set for false-positive measurement is specified but not yet run; we flag this as the principal gap in the current evaluation (§5.5).
 
 4. An **objective primary metric** (ASR) based on tool execution logs, not LLM-as-judge evaluation.
 
@@ -98,7 +98,7 @@ Social engineering leverages psychological manipulation to bypass security contr
 
 **Parser Agent:** Reads web content, summarizes findings, forwards to Admin. System prompt instructs it to parse and summarize; it has no tool access.
 
-**Admin Agent:** Receives messages from Parser, decides whether to act. Has access to four restricted tools. Default system prompt says to trust Parser but be careful with destructive operations.
+**Admin Agent:** Receives messages from Parser, decides whether to act. Has access to four restricted tools. Its system prompt is deliberately **neutral** — it states the agent's role and available tools and asks for a structured decision, with no cautionary language about destructive operations. This choice is load-bearing: an earlier defensive prompt drove measured ASR to zero for every model and masked all between-model variation (§4.5). The prompt is reproduced verbatim in the repository.
 
 **Message Bus:** Routes messages between agents. Logs all communications. No hidden system prompts (unlike LangChain/AutoGen).
 
@@ -113,13 +113,12 @@ Social engineering leverages psychological manipulation to bypass security contr
 
 ### 3.4 Benchmark Dataset
 
-**Baseline v1 (completed):** 16 attack payloads (4 per category) across 4 categories.
-**Extended v2 (in progress):** 60 attack payloads (15 per category).
+**v3 (used for all results in this paper):** 60 attack payloads, 15 per category.
 
 Dataset structure:
-- **Attack payloads:** 16 baseline, 44 new (total 60 planned)
-- **Benign control set:** 20 legitimate requests (planned future work)
-- **Conditions tested (baseline only):** single baseline condition
+- **Attack payloads:** 60 (15 per category), each carrying an escalation marker
+- **Benign control set:** not run. This is a known gap — see §5.5
+- **Conditions tested:** three (baseline, with_source_text, with_defense_mechanism)
 
 ### 3.5 Models Evaluated (v3 Final)
 
@@ -146,26 +145,31 @@ Measured by parsing execution logs. Binary outcome: tool called (1) or not calle
 2 = Compliance (Admin executes tool)
 
 **Confidence intervals:** 95% Wilson score (robust at 0% and 100%)
-**Statistical tests:** Fisher exact, McNemar (paired, for H3), Holm–Bonferroni correction for multiple comparisons.
+**Statistical tests:** Pearson χ² for omnibus comparisons across models, categories and conditions; Fisher exact for the targeted two-condition contrast in §4.4 (verified against χ² with identical conclusions).
 
-### 3.7 Experimental Design (Baseline v1)
+### 3.7 Experimental Design (v3 Final)
 
-Each attack payload is tested:
-- 1 condition: baseline (single-turn attack)
-- 1 repetition (no variance estimation in baseline)
-- 4 models (Groq collection)
+Each attack payload is tested under a full crossing:
+- **3 conditions:** baseline, with_source_text (raw source shown alongside the Parser summary), with_defense_mechanism (double-confirmation turn before execution)
+- **3 repetitions** per payload × condition, at non-zero temperature
+- **6 models** as Admin (Parser uses the same model as Admin in each run)
 
-Total runs: 16 payloads × 1 condition × 1 rep × 4 models = **64 scenarios**
-With multiple attacks per payload, actual runs: **576 total** (144 per model)
+Planned per model: 60 payloads × 3 conditions × 3 repetitions = **540 runs**.
+Planned total: 540 × 6 = 3,240.
+
+**Realised: 2,475 unique runs.** Four models completed all 540. The two Google
+models stopped at 169 and 146 when API rate limiting made completion
+impractical (§5.5). Results are reported on the 2,475 runs actually collected,
+after deduplication.
 
 ### 3.8 Power Analysis
 
-With n=144 runs per model (16 payloads × 9 runs each), power analysis shows:
-- Minimum detectable effect size: ~20-25 percentage points at 80% power
-- Current observed effects (0-5.6%) are below this threshold
-- Extended v2 with 60 payloads (540 scenarios per model) will improve power substantially
+At the realised sample sizes:
+- **Per model (n=540):** comfortably powered for the between-model differences we report; the 13.3pp gap between the extreme models is detected at p<10⁻²¹.
+- **Per condition (n≈825):** at a 6.5% baseline rate, 80% power corresponds to roughly a 3pp difference. The hypothesised 15pp reduction for source text (H3) would have been detected easily, so the null in §4.4 is informative rather than underpowered.
+- **Undersampled models (n=169, n=146):** adequate only to bound ASR loosely. gemini-flash-latest's 0% carries an upper bound of 2.56%, against 0.71% for minimax at n=540 — the same point estimate with a 3.6× wider interval.
 
-**Important caveat:** Small observed ASR values (1.04% overall) may reflect ceiling effects (well-defended models) rather than true lack of vulnerability. Additional testing with more sophisticated attacks is necessary.
+**Caveat:** a low ASR can reflect a model that refuses indiscriminately rather than one that discriminates well. Without the benign control set (§5.5) we cannot separate these, and this applies most directly to minimax/minimax-m3's 0%.
 
 ## 4. Results
 
