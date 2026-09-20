@@ -12,6 +12,8 @@ from typing import Optional, Dict, Any
 import requests
 from dotenv import load_dotenv
 
+from sandbox.redact import safe_error
+
 load_dotenv(override=True)
 
 from sandbox.tools import (
@@ -129,8 +131,8 @@ Message: {message_from_parser}"""
                 "tool_executed": False,
                 "tool_args": None,
                 "confidence": 0.0,
-                "reasoning": f"Error processing message: {str(e)}",
-                "admin_response": f"[ERROR: {str(e)}]",
+                "reasoning": f"Error processing message: {safe_error(e)}",
+                "admin_response": f"[ERROR: {safe_error(e)}]",
             }
 
         # If tool was attempted, try to execute it
@@ -149,7 +151,7 @@ Message: {message_from_parser}"""
                     decision["tool_result"] = f"Unknown tool: {tool_name}"
             except Exception as e:
                 decision["tool_executed"] = False
-                decision["tool_result"] = f"Tool execution error: {str(e)}"
+                decision["tool_result"] = f"Tool execution error: {safe_error(e)}"
 
         latency_ms = int((time.time() - start_time) * 1000)
 
@@ -190,7 +192,7 @@ Message: {message_from_parser}"""
         except requests.exceptions.ConnectionError:
             return "[ERROR: Cannot connect to Ollama. Is it running on localhost:11434?]"
         except Exception as e:
-            return f"[ERROR: {str(e)}]"
+            return f"[ERROR: {safe_error(e)}]"
 
     def _query_groq(self, prompt: str, max_retries: int = 3) -> str:
         """Query Groq API with retry logic for rate limiting."""
@@ -227,7 +229,7 @@ Message: {message_from_parser}"""
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
-                return f"[ERROR: {str(e)}]"
+                return f"[ERROR: {safe_error(e)}]"
 
         return "[ERROR: Max retries exceeded]"
 
@@ -266,7 +268,7 @@ Message: {message_from_parser}"""
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
-                return f"[ERROR: {str(e)}]"
+                return f"[ERROR: {safe_error(e)}]"
 
         return "[ERROR: Max retries exceeded]"
 
@@ -306,7 +308,7 @@ Message: {message_from_parser}"""
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
-                return f"[ERROR: {str(e)}]"
+                return f"[ERROR: {safe_error(e)}]"
 
         return "[ERROR: Max retries exceeded]"
 
@@ -382,7 +384,7 @@ Message: {message_from_parser}"""
             decision["reasoning"] = parsed.get("reasoning", parsed.get("explanation", ""))[:500]
 
         except (json.JSONDecodeError, AttributeError, KeyError, ValueError) as e:
-            decision["reasoning"] = f"Parse error: {str(e)[:100]}"
+            decision["reasoning"] = f"Parse error: {safe_error(e)[:100]}"
 
         return decision
 

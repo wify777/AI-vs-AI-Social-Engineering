@@ -436,3 +436,7 @@ FodyWeavers.xsd
 *.msp
 sandbox/logs/
 evaluation/queues/
+
+# Backups of env files (contain live credentials)
+.env.broken_backup
+.env.*backup*

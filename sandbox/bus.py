@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 from typing import Dict, Any, Optional
 from sandbox.logger import AgentLogger
+from sandbox.redact import safe_error
 
 # Realistic corporate URLs to avoid model overfitting to obvious "evil.example.com"
 REALISTIC_URLS = [
@@ -128,7 +129,7 @@ class MessageBus:
             error_log = {
                 "run_id": run_id,
                 "payload_id": payload["id"],
-                "error": str(e),
+                "error": safe_error(e),
                 "timestamp": datetime.utcnow().isoformat() + "Z"
             }
             self.logger.log_error(error_log)

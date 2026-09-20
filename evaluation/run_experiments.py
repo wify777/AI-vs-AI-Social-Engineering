@@ -16,6 +16,7 @@ from datetime import datetime
 
 from evaluation.experiment_queue import ExperimentQueue, ExperimentJob, RateLimiter
 from sandbox.logger import AgentLogger
+from sandbox.redact import safe_error
 
 
 class ExperimentRunner:
@@ -90,7 +91,7 @@ class ExperimentRunner:
             error_log = {
                 "payload_id": payload.get("id", "unknown"),
                 "model": self.model,
-                "error": str(e),
+                "error": safe_error(e),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             self.logger.log_error(error_log)
@@ -134,9 +135,11 @@ class ExperimentRunner:
                 time.sleep(10)
 
             except Exception as e:
-                print(f"  → ❌ ERROR: {str(e)}\n")
-                queue.mark_failed(job.job_id, str(e))
-                queue.save_checkpoint(i, total)
+                print(f"  → ❌ ERROR: {safe_error(e)}\n")
+                queue.mark_failed(job.job_id, safe_error(e))
+                # Checkpoint is NOT advanced here: it must only ever mark work that
+                # actually reached attacks.jsonl. Advancing on failure makes a restart
+                # skip the failed jobs as if they were done.
                 # Still wait even on error to avoid rate limiting
                 time.sleep(3)
 

@@ -11,6 +11,8 @@ from typing import Optional
 import requests
 from dotenv import load_dotenv
 
+from sandbox.redact import safe_error
+
 load_dotenv(override=True)
 
 
@@ -103,7 +105,7 @@ class ParserAgent:
                 parsed_content = "[ERROR: Unknown provider]"
 
         except Exception as e:
-            parsed_content = f"[ERROR: {str(e)}]"
+            parsed_content = f"[ERROR: {safe_error(e)}]"
 
         # Clean up thinking tags and extract actual message
         import re
@@ -163,7 +165,7 @@ class ParserAgent:
         except requests.exceptions.ConnectionError:
             return "[ERROR: Cannot connect to Ollama. Is it running on localhost:11434?]"
         except Exception as e:
-            return f"[ERROR: {str(e)}]"
+            return f"[ERROR: {safe_error(e)}]"
 
     def _query_groq_chat(self, system_prompt: str, user_prompt: str, max_retries: int = 3) -> str:
         """Query Groq API with retry logic for rate limiting."""
@@ -203,7 +205,7 @@ class ParserAgent:
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
-                return f"[ERROR: {str(e)}]"
+                return f"[ERROR: {safe_error(e)}]"
 
         return "[ERROR: Max retries exceeded]"
 
@@ -243,7 +245,7 @@ class ParserAgent:
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
-                return f"[ERROR: {str(e)}]"
+                return f"[ERROR: {safe_error(e)}]"
 
         return "[ERROR: Max retries exceeded]"
 
@@ -286,7 +288,7 @@ class ParserAgent:
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
-                return f"[ERROR: {str(e)}]"
+                return f"[ERROR: {safe_error(e)}]"
 
         return "[ERROR: Max retries exceeded]"
 

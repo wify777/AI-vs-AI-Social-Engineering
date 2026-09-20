@@ -1,39 +1,165 @@
 {
-  "openai/gpt-oss-20b": {
-    "Authority Spoofing": 17.51824817518248,
-    "Gaslighting": 19.696969696969695,
-    "Artificial Urgency": 22.388059701492537,
-    "Data Spoofing": 55.55555555555556
+  "overall": {
+    "asr": 6.8686868686868685,
+    "successes": 170,
+    "n": 2475
   },
-  "openai/gpt-oss-120b": {
-    "Authority Spoofing": 3.9603960396039604,
-    "Artificial Urgency": 6.293706293706294,
-    "Data Spoofing": 20.0,
-    "Gaslighting": 3.7037037037037033
-  },
-  "qwen/qwen3.6-27b": {
-    "Authority Spoofing": 0.0
-  },
-  "allam-2-7b": {
-    "Authority Spoofing": 100.0
-  },
-  "gemini-3.6-flash": {
-    "Authority Spoofing": 2.7027027027027026,
-    "Artificial Urgency": 0.0
-  },
-  "meta-llama/llama-3.2-3b-instruct:free": {
-    "Authority Spoofing": 0.0,
-    "Artificial Urgency": 0.0,
-    "Data Spoofing": 0.0,
-    "Gaslighting": 0.0
-  },
-  "mistralai/mistral-7b-instruct:free": {
-    "Authority Spoofing": 0.0,
-    "Artificial Urgency": 0.0,
-    "Data Spoofing": 0.0,
-    "Gaslighting": 0.0
-  },
-  "gemini-flash-latest": {
-    "Authority Spoofing": 0.0
+  "models": {
+    "openai/gpt-oss-20b": {
+      "n": 540,
+      "partial_run": false,
+      "categories": {
+        "Authority Spoofing": {
+          "asr": 19.25925925925926,
+          "successes": 26,
+          "n": 135
+        },
+        "Artificial Urgency": {
+          "asr": 13.333333333333334,
+          "successes": 18,
+          "n": 135
+        },
+        "Data Spoofing": {
+          "asr": 14.814814814814813,
+          "successes": 20,
+          "n": 135
+        },
+        "Gaslighting": {
+          "asr": 5.9259259259259265,
+          "successes": 8,
+          "n": 135
+        }
+      }
+    },
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": {
+      "n": 540,
+      "partial_run": false,
+      "categories": {
+        "Authority Spoofing": {
+          "asr": 14.814814814814813,
+          "successes": 20,
+          "n": 135
+        },
+        "Artificial Urgency": {
+          "asr": 17.037037037037038,
+          "successes": 23,
+          "n": 135
+        },
+        "Data Spoofing": {
+          "asr": 12.592592592592592,
+          "successes": 17,
+          "n": 135
+        },
+        "Gaslighting": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 135
+        }
+      }
+    },
+    "openai/gpt-oss-120b": {
+      "n": 540,
+      "partial_run": false,
+      "categories": {
+        "Authority Spoofing": {
+          "asr": 12.592592592592592,
+          "successes": 17,
+          "n": 135
+        },
+        "Artificial Urgency": {
+          "asr": 3.7037037037037033,
+          "successes": 5,
+          "n": 135
+        },
+        "Data Spoofing": {
+          "asr": 8.148148148148149,
+          "successes": 11,
+          "n": 135
+        },
+        "Gaslighting": {
+          "asr": 2.2222222222222223,
+          "successes": 3,
+          "n": 135
+        }
+      }
+    },
+    "gemini-3.6-flash": {
+      "n": 169,
+      "partial_run": true,
+      "categories": {
+        "Authority Spoofing": {
+          "asr": 1.6666666666666667,
+          "successes": 1,
+          "n": 60
+        },
+        "Artificial Urgency": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 36
+        },
+        "Data Spoofing": {
+          "asr": 2.7777777777777777,
+          "successes": 1,
+          "n": 36
+        },
+        "Gaslighting": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 37
+        }
+      }
+    },
+    "gemini-flash-latest": {
+      "n": 146,
+      "partial_run": true,
+      "categories": {
+        "Authority Spoofing": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 37
+        },
+        "Artificial Urgency": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 36
+        },
+        "Data Spoofing": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 36
+        },
+        "Gaslighting": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 37
+        }
+      }
+    },
+    "minimax/minimax-m3:free": {
+      "n": 540,
+      "partial_run": false,
+      "categories": {
+        "Authority Spoofing": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 135
+        },
+        "Artificial Urgency": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 135
+        },
+        "Data Spoofing": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 135
+        },
+        "Gaslighting": {
+          "asr": 0.0,
+          "successes": 0,
+          "n": 135
+        }
+      }
+    }
   }
 }
