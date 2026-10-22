@@ -1,0 +1,30 @@
+{
+  "hashes_match": true,
+  "evidence_complete": true,
+  "orphan_stub": false,
+  "process_alive": false,
+  "lock_busy": false,
+  "planned": 2,
+  "completed": 0,
+  "review": 1,
+  "pending": 0,
+  "failed": 1,
+  "running": 0,
+  "last_error": "api_error_network",
+  "http_statuses": [
+    null,
+    null,
+    null
+  ],
+  "model_response_received": false,
+  "decision_recorded": false,
+  "confirmation_recorded": false,
+  "stub_recorded": false,
+  "job_attempts_remaining": 2,
+  "http_reservations_remaining": 20,
+  "required_http_headroom": 9,
+  "quota_wait": false,
+  "provider_hold": false,
+  "deadline_expired": false,
+  "previous_attempts_preserved": true
+}
