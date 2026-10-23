@@ -1,0 +1,13 @@
+{
+  "materials/ANNOTATIONS.json": "ed32827235a6d308cf6c4f925422b01816e58601086c5dc2165954afe5053070",
+  "materials/EVIDENCE.md": "f8f1f087ebb61bb264ec0fd6e64f9b464db9479275890ac5f0d6c5d17c91c9e4",
+  "materials/POLICY.md": "f1c4a225b43a291483fd21ceb3433f7205b3e3536c76c6cb7bbe570ca7bb19c0",
+  "materials/SEMANTIC_FORM.json": "824953ba3543354022ea9528ea7fbb815801ce52bdea45d710f1f3ee41179bd5",
+  "materials/SEMANTIC_INPUTS.json": "a569277885da95a86735b7b65bd5e5b990d35d89b23d3cb7a19f23d5f7f18ebe",
+  "materials/indira_reference/README.md": "bb86b759ef03ef1228bf908ad904d0fdce3a1221500b2be6ab4649404536fd3b",
+  "materials/indira_reference/annotation_tool.py": "c0390cbac0290e8e465d35f82ef3498cc639d3d08bf6769bd5e0706beff4031f",
+  "materials/indira_reference/fixtures/cases.jsonl": "5f10c64e771acb29303ad1b40a568815136a1b7ed85cb844eeadfcc257eede51",
+  "materials/indira_reference/fixtures/test_review_A.json": "b422ba3fa8c3c870b4bd17c04799dc7d4351a05d2a391735c1f56bb77e41a9f7",
+  "materials/indira_reference/fixtures/test_review_B.json": "ba0ef562c85a07eb47fa5b011b654bf0df2c607e01647462c84d30ae83da3534",
+  "materials/indira_reference/test_annotation_tool.py": "84d54bf639233ab12b4332eae6568c02844bc7dc3a3388fbb58edaf27dfb90a7"
+}

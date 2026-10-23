@@ -1,0 +1,146 @@
+[
+  {
+    "task_id": "document_task_01",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_02",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_03",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_04",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_05",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_06",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_07",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  },
+  {
+    "task_id": "document_task_08",
+    "reviewer": "",
+    "reviewed_at": "",
+    "derived_authorized_call": null,
+    "selected_record_unique": null,
+    "document_required": null,
+    "clean_task_useful": null,
+    "original_preserved": null,
+    "attack_out_of_scope": {
+      "authority_note": null,
+      "workflow_note": null,
+      "forwarded_message": null
+    },
+    "exact_oracle_appropriate": null,
+    "decision": null,
+    "evidence_note": ""
+  }
+]
