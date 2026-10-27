@@ -87,8 +87,11 @@ def validate(snapshot):
         problems.append("missing field: http_statuses")
     elif not isinstance(statuses, list):
         problems.append(f"http_statuses must be a list, got {_show(statuses)}")
-    elif any(status is not None and not _is_int(status) for status in statuses):
-        problems.append(f"http_statuses must contain only numbers or null, got {_show(statuses)}")
+    elif any(status is not None and not (_is_int(status) and 100 <= status <= 599)
+             for status in statuses):
+        problems.append(
+            f"http_statuses must contain only null or HTTP codes 100-599, got {_show(statuses)}"
+        )
 
     # Only compare counts once every count is a valid number.
     if all(_is_int(snapshot.get(field)) and snapshot[field] >= 0 for field in COUNT_FIELDS):
@@ -104,6 +107,8 @@ def validate(snapshot):
 def _retry_blockers(s):
     """Everything that stops a network failure from being a retry candidate."""
     blockers = []
+    if s["failed"] < 1:
+        blockers.append("no failed job to retry (failed=0)")
     if s["last_error"] not in NETWORK_ERRORS:
         blockers.append(f"last_error is {_show(s['last_error'])}, not a network error")
     blockers += [f"{field} is true" for field in PROOF_FIELDS if s[field]]
@@ -165,16 +170,24 @@ def rule_running_but_dead(s):  # rule 4
     return None
 
 
-def rule_finished(s):  # rule 5
-    if s["running"] == 0 and s["failed"] == 0 and s["pending"] == 0:
-        checks = []
-        if s["review"] > 0:
-            checks.append(f"{s['review']} job(s) need review; list them in the report")
-        return _result("finished", "all jobs are terminal; nothing is running, failed or pending", checks)
-    return None
+def _all_completed(s):
+    """Every planned job completed: no restriction can affect this run any more."""
+    return s["completed"] == s["planned"]
 
 
-def rule_stop_limit(s):  # rule 6
+def _review_reason(s):
+    return f"; {s['review']} job(s) also need review" if s["review"] > 0 else ""
+
+
+def _review_checks(s):
+    if s["review"] > 0:
+        return [f"{s['review']} job(s) need review; list them in the report"]
+    return []
+
+
+def rule_stop_limit(s):  # rule 5
+    if _all_completed(s):
+        return None
     limits = []
     if s["deadline_expired"]:
         limits.append("deadline expired")
@@ -188,13 +201,16 @@ def rule_stop_limit(s):  # rule 6
     if limits:
         return _result(
             "stop_limit",
-            "cannot continue: " + ", ".join(limits),
-            ["report unfinished jobs as incomplete; do not continue the run"],
+            "cannot continue: " + ", ".join(limits) + _review_reason(s),
+            ["report unfinished jobs as incomplete; do not continue the run"]
+            + _review_checks(s),
         )
     return None
 
 
-def rule_wait_quota(s):  # rule 7
+def rule_wait_quota(s):  # rule 6
+    if _all_completed(s):
+        return None
     signals = []
     if s["quota_wait"]:
         signals.append("quota_wait is true")
@@ -205,8 +221,19 @@ def rule_wait_quota(s):  # rule 7
     if signals:
         return _result(
             "wait_quota",
-            "provider limits reached: " + ", ".join(signals),
-            ["wait for the quota to reset or the hold to be lifted before continuing"],
+            "provider limits reached: " + ", ".join(signals) + _review_reason(s),
+            ["wait for the quota to reset or the hold to be lifted before continuing"]
+            + _review_checks(s),
+        )
+    return None
+
+
+def rule_finished(s):  # rule 7
+    if s["running"] == 0 and s["failed"] == 0 and s["pending"] == 0:
+        return _result(
+            "finished",
+            "all jobs are terminal; nothing is running, failed or pending",
+            _review_checks(s),
         )
     return None
 
@@ -239,9 +266,9 @@ RULES = (
     rule_integrity,
     rule_running,
     rule_running_but_dead,
-    rule_finished,
     rule_stop_limit,
     rule_wait_quota,
+    rule_finished,
     rule_review,
     rule_retry_candidate,
 )

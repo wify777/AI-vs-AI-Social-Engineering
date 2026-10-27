@@ -166,6 +166,77 @@ class CombinationTests(DiagnoseTestCase):
                 self.assertEqual(snapshot, before)
 
 
+def review_only(**changes):
+    """One job in review, nothing running, failed or pending."""
+    return variant("finished", completed=0, review=1, **changes)
+
+
+def completed_only(**changes):
+    return variant("finished", **changes)
+
+
+class StageOneRegressionTests(DiagnoseTestCase):
+    def assertMentionsReview(self, result):
+        self.assertIn("review", result["reason"])
+        self.assertTrue(any("review" in check for check in result["checks_needed"]))
+
+    # Fix 1: review-only must not hide an active restriction.
+    def test_review_only_with_restriction_returns_restriction(self):
+        cases = {
+            "quota_wait": ({"quota_wait": True}, "wait_quota"),
+            "provider_hold": ({"provider_hold": True}, "wait_quota"),
+            "429": ({"http_statuses": [None, None, 429]}, "wait_quota"),
+            "deadline expired": ({"deadline_expired": True}, "stop_limit"),
+            "no attempts left": ({"job_attempts_remaining": 0}, "stop_limit"),
+            "HTTP budget too low": ({"http_reservations_remaining": 8}, "stop_limit"),
+        }
+        for label, (changes, expected) in cases.items():
+            with self.subTest(label):
+                result = self.assertAction(review_only(**changes), expected)
+                self.assertMentionsReview(result)
+
+    def test_review_only_without_restriction_is_finished(self):
+        result = self.assertAction(review_only(), "finished")
+        self.assertTrue(any("review" in check for check in result["checks_needed"]))
+
+    def test_completed_only_ignores_restrictions(self):
+        cases = {
+            "deadline expired": {"deadline_expired": True},
+            "429": {"http_statuses": [None, None, 429]},
+            "quota_wait": {"quota_wait": True},
+            "no attempts left": {"job_attempts_remaining": 0},
+        }
+        for label, changes in cases.items():
+            with self.subTest(label):
+                self.assertAction(completed_only(**changes), "finished")
+
+    def test_restriction_with_failed_and_review_mentions_review(self):
+        result = self.assertAction(variant("review", deadline_expired=True), "stop_limit")
+        self.assertMentionsReview(result)
+
+    # Fix 2: retry_candidate needs at least one failed job.
+    def test_pending_only_network_error_is_not_retry(self):
+        snapshot = variant("retry_candidate", failed=0, pending=1)
+        result = self.assertAction(snapshot, "manual_check")
+        self.assertIn("failed=0", result["reason"])
+
+    def test_completed_only_network_error_is_not_retry(self):
+        snapshot = variant("retry_candidate", failed=0, completed=1)
+        self.assertAction(snapshot, "finished")
+
+    # Fix 3: http_statuses entries are null or 100-599.
+    def test_invalid_http_status_values(self):
+        for bad in (99, 600, 0, -1, True, "429", 429.0):
+            with self.subTest(status=bad):
+                snapshot = variant("retry_candidate", http_statuses=[None, bad])
+                result = self.assertAction(snapshot, "manual_check")
+                self.assertIn("http_statuses", result["reason"])
+
+    def test_http_status_range_edges_are_valid(self):
+        snapshot = variant("retry_candidate", http_statuses=[100, 599, None, 503])
+        self.assertAction(snapshot, "retry_candidate")
+
+
 class CliTests(unittest.TestCase):
     def run_cli(self, *args):
         out, err = io.StringIO(), io.StringIO()

@@ -70,8 +70,9 @@ About 2-3 hours
    Akhmad, is this right? It is one line in `RULES` to change.
 2. **Finished vs stop_limit.** A run where every job is terminal is `finished`
    even if the deadline has expired. Is that the intended reading?
-3. **Retry with no failed job.** A network error where the only unfinished
-   jobs are `pending` (none `failed`) can still be `retry_candidate`. Should
-   retry require `failed > 0`?
+3. **Retry with no failed job.** Resolved in the Stage 1 fix: retry now
+   requires `failed >= 1`.
+5. **`http_statuses`: historical or current?** Assumed historical (all
+   attempts so far), so any 429 in the list blocks a retry. See README.
 4. **Network error names.** Only `api_error_network` counts as a network
    error. Are there other `last_error` values that should count?
