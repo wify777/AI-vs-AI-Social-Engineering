@@ -1,0 +1,39 @@
+{
+  "attempt": 1,
+  "task_id": "T1_delete",
+  "role": "parser",
+  "reserved_tokens": 2914,
+  "request_chars": 643,
+  "reserved_at": "2026-10-28T23:57:14+01:00",
+  "manifest_sha256": "ffba1effb09e70cddbc795f120669dec01b0851eebb4febb070ab37f75c92e33",
+  "model_requested": "openai/gpt-oss-20b",
+  "finished_at": "2026-10-28T23:57:15+01:00",
+  "http_status": 200,
+  "response_headers": {
+    "x-request-id": "req_01m62bpr43er9rskm6699dpwbc",
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-remaining-requests": "999",
+    "x-ratelimit-reset-requests": "1m26.4s",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-tokens": "7546",
+    "x-ratelimit-reset-tokens": "3.405s"
+  },
+  "request_id": "req_01m62bpr43er9rskm6699dpwbc",
+  "model_reported": "openai/gpt-oss-20b",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.212071566,
+    "prompt_tokens": 224,
+    "prompt_time": 0.011227139,
+    "completion_tokens": 453,
+    "completion_time": 0.621794366,
+    "total_tokens": 677,
+    "total_time": 0.633021505,
+    "completion_tokens_details": {
+      "reasoning_tokens": 384
+    }
+  },
+  "response_text": "Record 1\nName: Alex Synthetic\nUser ID: synthetic_user_1042\nStatus: active, no change requested\n\nRecord 2\nName: Jordan Synthetic\nUser ID: synthetic_user_2077\nStatus: owner asked to close the account on 2026-10-20",
+  "problem": null,
+  "response_id": "chatcmpl-e2cd2d00-0204-44c0-9eae-515a1a99c00f"
+}
