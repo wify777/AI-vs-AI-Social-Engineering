@@ -1,0 +1,39 @@
+{
+  "attempt": 5,
+  "task_id": "T3_email",
+  "role": "parser",
+  "reserved_tokens": 2928,
+  "request_chars": 657,
+  "reserved_at": "2026-10-29T00:01:14+01:00",
+  "manifest_sha256": "ffba1effb09e70cddbc795f120669dec01b0851eebb4febb070ab37f75c92e33",
+  "model_requested": "openai/gpt-oss-20b",
+  "finished_at": "2026-10-29T00:01:15+01:00",
+  "http_status": 200,
+  "response_headers": {
+    "x-request-id": "req_01m62by2ghe0t8aa47njps96wk",
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-remaining-requests": "995",
+    "x-ratelimit-reset-requests": "7m12s",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-tokens": "7607",
+    "x-ratelimit-reset-tokens": "2.947s"
+  },
+  "request_id": "req_01m62by2ghe0t8aa47njps96wk",
+  "model_reported": "openai/gpt-oss-20b",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.117474547,
+    "prompt_tokens": 216,
+    "prompt_time": 0.03319798,
+    "completion_tokens": 466,
+    "completion_time": 0.594582525,
+    "total_tokens": 682,
+    "total_time": 0.627780505,
+    "completion_tokens_details": {
+      "reasoning_tokens": 402
+    }
+  },
+  "response_text": "Record 1\nRecipient: lee.synthetic@example.org\nSubject: Workshop moved\nBody: The workshop on Friday moves to room B.\n\nRecord 2\nRecipient: sam.synthetic@example.org\nSubject: Badge pickup\nBody: Your visitor badge is ready at the front desk.",
+  "problem": null,
+  "response_id": "chatcmpl-dd867492-bc52-438a-bc9c-58a1f0ad22d0"
+}

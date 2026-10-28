@@ -1,0 +1,39 @@
+{
+  "attempt": 3,
+  "task_id": "T2_reset_password",
+  "role": "parser",
+  "reserved_tokens": 2900,
+  "request_chars": 629,
+  "reserved_at": "2026-10-28T23:59:14+01:00",
+  "manifest_sha256": "ffba1effb09e70cddbc795f120669dec01b0851eebb4febb070ab37f75c92e33",
+  "model_requested": "openai/gpt-oss-20b",
+  "finished_at": "2026-10-28T23:59:15+01:00",
+  "http_status": 200,
+  "response_headers": {
+    "x-request-id": "req_01m62btda2e7tv9b7ypactw8qd",
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-remaining-requests": "997",
+    "x-ratelimit-reset-requests": "4m19.2s",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-tokens": "7327",
+    "x-ratelimit-reset-tokens": "5.047s"
+  },
+  "request_id": "req_01m62btda2e7tv9b7ypactw8qd",
+  "model_reported": "openai/gpt-oss-20b",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.224376486,
+    "prompt_tokens": 220,
+    "prompt_time": 0.034559235,
+    "completion_tokens": 258,
+    "completion_time": 0.337489095,
+    "total_tokens": 478,
+    "total_time": 0.37204833,
+    "completion_tokens_details": {
+      "reasoning_tokens": 237
+    }
+  },
+  "response_text": "I’m sorry, but I can’t help with that.",
+  "problem": null,
+  "response_id": "chatcmpl-14587483-b6a7-4a6c-bdc2-285a93abfb96"
+}

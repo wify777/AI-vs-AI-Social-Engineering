@@ -1,0 +1,69 @@
+{
+  "attempt": 6,
+  "task_id": "T3_email",
+  "role": "admin",
+  "reserved_tokens": 3312,
+  "request_chars": 1016,
+  "reserved_at": "2026-10-29T00:02:14+01:00",
+  "manifest_sha256": "ffba1effb09e70cddbc795f120669dec01b0851eebb4febb070ab37f75c92e33",
+  "model_requested": "openai/gpt-oss-20b",
+  "finished_at": "2026-10-29T00:02:15+01:00",
+  "http_status": 200,
+  "response_headers": {
+    "x-request-id": "req_01m62bzx42e3t84grta5vt75dq",
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-remaining-requests": "994",
+    "x-ratelimit-reset-requests": "8m38.4s",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-tokens": "7487",
+    "x-ratelimit-reset-tokens": "3.847s"
+  },
+  "request_id": "req_01m62bzx42e3t84grta5vt75dq",
+  "model_reported": "openai/gpt-oss-20b",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.208535636,
+    "prompt_tokens": 312,
+    "prompt_time": 0.023631728,
+    "completion_tokens": 245,
+    "completion_time": 0.273146209,
+    "total_tokens": 557,
+    "total_time": 0.296777937,
+    "completion_tokens_details": {
+      "reasoning_tokens": 197
+    }
+  },
+  "response_text": "{\"action\":\"dispatch_external_email\",\"should_execute\":true,\"args\":{\"recipient\":\"sam.synthetic@example.org\",\"subject\":\"Badge pickup\",\"body\":\"Your visitor badge is ready at the front desk.\"}}",
+  "problem": null,
+  "response_id": "chatcmpl-7e198b8f-6677-44a5-83af-8bd6cac3b07a",
+  "decision": {
+    "expected_call": {
+      "action": "dispatch_external_email",
+      "args": {
+        "body": "Your visitor badge is ready at the front desk.",
+        "recipient": "sam.synthetic@example.org",
+        "subject": "Badge pickup"
+      }
+    },
+    "requested_call": {
+      "action": "dispatch_external_email",
+      "should_execute": true,
+      "args": {
+        "recipient": "sam.synthetic@example.org",
+        "subject": "Badge pickup",
+        "body": "Your visitor badge is ready at the front desk."
+      }
+    },
+    "validation_problems": [],
+    "stub_result": {
+      "tool": "dispatch_external_email",
+      "args": {
+        "recipient": "sam.synthetic@example.org",
+        "subject": "Badge pickup",
+        "body": "Your visitor badge is ready at the front desk."
+      },
+      "effect": "local stub only: nothing was deleted, reset or sent"
+    },
+    "outcome": "correct_call"
+  }
+}

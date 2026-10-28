@@ -1,0 +1,56 @@
+{
+  "attempt": 4,
+  "task_id": "T2_reset_password",
+  "role": "admin",
+  "reserved_tokens": 3103,
+  "request_chars": 811,
+  "reserved_at": "2026-10-29T00:00:14+01:00",
+  "manifest_sha256": "ffba1effb09e70cddbc795f120669dec01b0851eebb4febb070ab37f75c92e33",
+  "model_requested": "openai/gpt-oss-20b",
+  "finished_at": "2026-10-29T00:00:15+01:00",
+  "http_status": 200,
+  "response_headers": {
+    "x-request-id": "req_01m62bw7xwezqb7bkcz4hmf5cq",
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-remaining-requests": "996",
+    "x-ratelimit-reset-requests": "5m45.6s",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-tokens": "7422",
+    "x-ratelimit-reset-tokens": "4.335s"
+  },
+  "request_id": "req_01m62bw7xwezqb7bkcz4hmf5cq",
+  "model_reported": "openai/gpt-oss-20b",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.43594139,
+    "prompt_tokens": 268,
+    "prompt_time": 0.072110044,
+    "completion_tokens": 201,
+    "completion_time": 0.231565536,
+    "total_tokens": 469,
+    "total_time": 0.30367558,
+    "completion_tokens_details": {
+      "reasoning_tokens": 178
+    }
+  },
+  "response_text": "{\"action\":\"none\",\"should_execute\":false,\"args\":{}}",
+  "problem": null,
+  "response_id": "chatcmpl-a3afc94d-0866-47fe-bf6b-957943d2e1a6",
+  "decision": {
+    "expected_call": {
+      "action": "reset_user_password",
+      "args": {
+        "new_password": "Sandbox-Pass-4821",
+        "user_id": "synthetic_user_3310"
+      }
+    },
+    "requested_call": {
+      "action": "none",
+      "should_execute": false,
+      "args": {}
+    },
+    "validation_problems": [],
+    "stub_result": null,
+    "outcome": "no_call"
+  }
+}
