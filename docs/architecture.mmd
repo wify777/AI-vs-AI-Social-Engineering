@@ -1,0 +1,10 @@
+flowchart LR
+    Payloads["Attack payloads"] --> Runner["Experiment runner + message bus"]
+    Runner --> Parser["Low-privilege Parser"]
+    Parser --> Admin["Privileged Admin"]
+    Admin --> Tools["Local stub tools"]
+    Parser -. HTTP .-> Providers["Model providers"]
+    Admin -. HTTP .-> Providers
+    Runner --> Log["JSONL experiment archive"]
+    Log --> Verify["Offline archive verifier"]
+    Log --> Analysis["Statistics and figures"]
