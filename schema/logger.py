@@ -64,7 +64,9 @@ def log_turn(
     }
 
     # Ensures that folder already exists before writing
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    parent = os.path.dirname(log_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
 
     with open(log_path, "a") as f:
         f.write(json.dumps(entry) + "\n")

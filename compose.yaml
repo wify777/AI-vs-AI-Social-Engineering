@@ -1,0 +1,9 @@
+services:
+  verify:
+    build: .
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"

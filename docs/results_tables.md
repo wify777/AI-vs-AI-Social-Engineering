@@ -1,3 +1,5 @@
+> **Historical research artifact.** Interpret this document with the [reproducibility audit](reproducibility-audit.md). Provider-error markers and unverified condition wiring prevent treating the old comparisons as validated findings.
+
 # Publication-Ready Results Tables
 ## AgentTrust Baseline v1 (n=576)
 
