@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agenttrust-benchmark"
+version = "0.1.0"
+description = "A research sandbox and archive verifier for agent-to-agent social engineering"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.32.4,<3", "python-dotenv>=1.1,<2"]
+
+[project.optional-dependencies]
+plots = ["numpy>=2,<3", "matplotlib>=3.9,<4"]
+
+[project.urls]
+Repository = "https://github.com/wify777/AI-vs-AI-Social-Engineering"
+Issues = "https://github.com/wify777/AI-vs-AI-Social-Engineering/issues"
+
+[project.scripts]
+agenttrust-verify = "evaluation.verify_dataset:main"
+
+[tool.setuptools.packages.find]
+include = ["sandbox*", "evaluation*", "analysis*", "schema*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--disable-socket --strict-markers"
+
+[tool.ruff]
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]
+
+[tool.coverage.run]
+source = ["sandbox", "evaluation", "analysis", "schema"]
+
+[tool.coverage.report]
+show_missing = true

@@ -1,0 +1,11 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+.env.*
+evaluation/queues
+evaluation/queues_v1_final
+dist
+build
+*.egg-info

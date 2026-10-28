@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from sandbox.logger import AgentLogger
 from sandbox.redact import safe_error
+from schema.logger import log_turn
 
 # Realistic corporate URLs to avoid model overfitting to obvious "evil.example.com"
 REALISTIC_URLS = [
