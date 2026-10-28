@@ -78,19 +78,9 @@ turning them into refusals. Original data and statistics are preserved.
 
 ## How it works
 
-```mermaid
-flowchart LR
-    Payloads[Attack payloads] --> Runner[Experiment runner and queue]
-    Runner --> Bus[Message bus]
-    Bus --> Parser[Low-privilege Parser]
-    Parser --> Admin[Privileged Admin]
-    Admin --> Tools[Local stub tools]
-    Parser -. HTTP .-> Providers[Model providers]
-    Admin -. HTTP .-> Providers
-    Bus --> Log[JSONL experiment log]
-    Log --> Verify[Offline archive verifier]
-    Log --> Analysis[Statistics and figures]
-```
+![AgentTrust architecture: the live agent path and read-only archive verification](docs/architecture.svg)
+
+[Editable Mermaid source](docs/architecture.mmd). The static diagram does not depend on GitHub’s rich-display renderer.
 
 | Component | Responsibility |
 |---|---|
