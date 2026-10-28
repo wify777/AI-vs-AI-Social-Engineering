@@ -1,3 +1,5 @@
+> **Historical research artifact.** Interpret this document with the [reproducibility audit](reproducibility-audit.md). Provider-error markers and unverified condition wiring prevent treating the old comparisons as validated findings.
+
 # AgentTrust: Benchmarking Privilege Escalation via Agent-to-Agent Social Engineering in Multi-Agent LLM Systems
 
 ## Abstract

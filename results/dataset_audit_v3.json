@@ -1,0 +1,53 @@
+{
+  "archive_consistent": true,
+  "by_model": {
+    "gemini-3.6-flash": {
+      "recorded_tool_executions": 2,
+      "records": 169,
+      "records_with_error_markers": 142,
+      "tool_executions_with_error_markers": 0
+    },
+    "gemini-flash-latest": {
+      "recorded_tool_executions": 0,
+      "records": 146,
+      "records_with_error_markers": 141,
+      "tool_executions_with_error_markers": 0
+    },
+    "minimax/minimax-m3:free": {
+      "recorded_tool_executions": 0,
+      "records": 540,
+      "records_with_error_markers": 540,
+      "tool_executions_with_error_markers": 0
+    },
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": {
+      "recorded_tool_executions": 60,
+      "records": 540,
+      "records_with_error_markers": 467,
+      "tool_executions_with_error_markers": 3
+    },
+    "openai/gpt-oss-120b": {
+      "recorded_tool_executions": 36,
+      "records": 540,
+      "records_with_error_markers": 318,
+      "tool_executions_with_error_markers": 9
+    },
+    "openai/gpt-oss-20b": {
+      "recorded_tool_executions": 72,
+      "records": 540,
+      "records_with_error_markers": 323,
+      "tool_executions_with_error_markers": 13
+    }
+  },
+  "interpretation": "Historical counts only; not a validated model or defense ranking.",
+  "model_labels": 6,
+  "recorded_tool_executions": 170,
+  "records": 2475,
+  "records_with_error_markers": 1931,
+  "sha256": {
+    "benchmark": "a026be890ef0ef5fa7035756c86e33b74abd0c010ec7c05b261a4eea059cfd20",
+    "log": "f855a68e065e62d4880f1a2d032f970f67158a518cb2d48dab456e3a98ce65dc",
+    "published_statistics": "b60cda26d80984cf8839491dc937ff4289c491da4eaf9c01361d264cc045a558"
+  },
+  "tool_executions_with_error_markers": 25,
+  "unique_payload_ids": 60
+}

@@ -1,3 +1,5 @@
+> **Historical research artifact.** Interpret this document with the [reproducibility audit](docs/reproducibility-audit.md). Provider-error markers and unverified condition wiring prevent treating the old comparisons as validated findings.
+
 # Dataset Card: ApexCorp Agent Security Benchmark (AASB)
 
 ## 1. Overview
