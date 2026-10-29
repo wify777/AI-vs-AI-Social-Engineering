@@ -1,0 +1,25 @@
+test_agreement_and_preservation (test_review_bridge.BridgeTests.test_agreement_and_preservation) ... ok
+test_blank (test_review_bridge.BridgeTests.test_blank) ... ok
+test_category (test_review_bridge.BridgeTests.test_category) ... ok
+test_config (test_review_bridge.BridgeTests.test_config) ... ok
+test_disagreement (test_review_bridge.BridgeTests.test_disagreement) ... ok
+test_duplicate_id (test_review_bridge.BridgeTests.test_duplicate_id) ... ok
+test_full (test_review_bridge.BridgeTests.test_full) ... ok
+test_hash (test_review_bridge.BridgeTests.test_hash) ... ok
+test_missing_id (test_review_bridge.BridgeTests.test_missing_id) ... ok
+test_multiple_identities (test_review_bridge.BridgeTests.test_multiple_identities) ... ok
+test_no_overwrite (test_review_bridge.BridgeTests.test_no_overwrite) ... ok
+test_partial (test_review_bridge.BridgeTests.test_partial) ... ok
+test_policy (test_review_bridge.BridgeTests.test_policy) ... ok
+test_reference_duplicate (test_review_bridge.BridgeTests.test_reference_duplicate) ... ok
+test_same_reviewer (test_review_bridge.BridgeTests.test_same_reviewer) ... ok
+test_stage (test_review_bridge.BridgeTests.test_stage) ... ok
+test_timezone (test_review_bridge.BridgeTests.test_timezone) ... ok
+test_unknown_id (test_review_bridge.BridgeTests.test_unknown_id) ... ok
+test_unread (test_review_bridge.BridgeTests.test_unread) ... ok
+test_wrong_type (test_review_bridge.BridgeTests.test_wrong_type) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.059s
+
+OK
